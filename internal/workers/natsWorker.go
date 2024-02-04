@@ -2,16 +2,18 @@ package workers
 
 import (
 	"context"
-	client "github.com/Kebastos/NatsToCh/clients"
+	"fmt"
 	"github.com/Kebastos/NatsToCh/config"
-	"github.com/Kebastos/NatsToCh/log"
-	"github.com/Kebastos/NatsToCh/models"
+	client "github.com/Kebastos/NatsToCh/internal/clients"
+	"github.com/Kebastos/NatsToCh/internal/log"
+	"github.com/Kebastos/NatsToCh/internal/models"
 	"github.com/nats-io/nats.go"
 	"time"
 )
 
 type ClickhouseStorage interface {
 	BatchInsertToDefaultSchema(tableName string, data []interface{}, ctx context.Context) error
+	AsyncInsertToDefaultSchema(tableName string, data []interface{}, wait bool, ctx context.Context) error
 }
 
 type NatsWorker struct {
@@ -31,10 +33,16 @@ func NewNatsWorker(cfg *config.Config, sb *client.NatsClient, ch ClickhouseStora
 func (n *NatsWorker) Start() error {
 	for _, s := range n.cfg {
 		if s.UseBuffer {
-			return nil
+			return fmt.Errorf("buffered mode is not implemented yet")
 		}
 
-		err := n.subsNoBuffer(s.Name, s.TableName)
+		var err error
+		if s.Async {
+			err = n.subsNoBufferAsync(s.Name, s.TableName, s.AsyncInsertConfig.Wait)
+		} else {
+			err = n.subsNoBuffer(s.Name, s.TableName)
+		}
+
 		if err != nil {
 			return err
 		}
@@ -60,6 +68,27 @@ func (n *NatsWorker) subsNoBuffer(subject string, table string) error {
 		}
 
 		err := n.ch.BatchInsertToDefaultSchema(table, []interface{}{entity}, context.Background())
+		if err != nil {
+			log.Errorf("failed to insert data to clickhouse. %s", err)
+		}
+	}
+
+	_, err := n.sb.Subscribe(subject, callback)
+
+	return err
+}
+
+func (n *NatsWorker) subsNoBufferAsync(subject string, table string, wait bool) error {
+	callback := func(m *nats.Msg) {
+		msg := string(m.Data)
+
+		entity := &models.DefaultTable{
+			Subject:        m.Subject,
+			CreateDateTime: time.Now(),
+			Content:        msg,
+		}
+
+		err := n.ch.AsyncInsertToDefaultSchema(table, []interface{}{entity}, wait, context.Background())
 		if err != nil {
 			log.Errorf("failed to insert data to clickhouse. %s", err)
 		}

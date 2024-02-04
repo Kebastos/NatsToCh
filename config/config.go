@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
 	"os"
@@ -15,9 +16,9 @@ type Config struct {
 }
 
 type Server struct {
-	Env       string `yaml:"env" env:"ENV" envDefault:"local"`
-	Namespace string `yaml:"namespace" env:"NAMESPACE" envDefault:"natstoch"`
-	Debug     bool   `yaml:"debug" env:"DEBUG" envDefault:"false"`
+	Env       string `yaml:"env"`
+	Namespace string `yaml:"namespace"`
+	Debug     bool   `yaml:"debug"`
 	HTTP      HTTP   `yaml:"http"`
 }
 
@@ -26,33 +27,40 @@ type HTTP struct {
 }
 
 type CHConfig struct {
-	Host        string        `yaml:"host" env:"CH_HOST" envDefault:"localhost"`
-	Port        uint16        `yaml:"port" env:"CH_PORT" envDefault:"9000"`
-	Database    string        `yaml:"db" env:"CH_DATABASE" envDefault:"default"`
-	User        string        `yaml:"user" env:"CH_USER" envDefault:"default"`
-	Password    string        `yaml:"password" env:"CH_PASSWORD" envDefault:"default"`
-	Timeout     time.Duration `yaml:"timeout" env:"CH_TIMEOUT" envDefault:"2s"`
-	IdleTimeout time.Duration `yaml:"idle_timeout" env:"CH_IDLE_TIMEOUT" envDefault:"30s"`
+	Host            string        `yaml:"host"`
+	Port            uint16        `yaml:"port"`
+	Database        string        `yaml:"db"`
+	User            string        `yaml:"user"`
+	Password        string        `yaml:"password"`
+	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime"`
+	MaxOpenConns    int           `yaml:"max_open_conns"`
+	MaxIdleConns    int           `yaml:"max_idle_conns"`
 }
 
 type NATSConfig struct {
-	ClientName             string `yaml:"client_name" env:"NATS_CLIENT_NAME" envDefault:"natsToCh"`
-	User                   string `yaml:"user" env:"NATS_USER" envDefault:"localUser"`
-	Password               string `yaml:"password" env:"NATS_PASSWORD" envDefault:"localPassword"`
-	Server                 string `yaml:"server" env:"NATS_SERVER" envDefault:"localhost"`
-	MaxReconnect           int    `yaml:"max_reconnect" env:"NATS_MAX_RECONNECT" envDefault:"-1"`
-	ReconnectWait          int    `yaml:"reconnect_wait" env:"NATS_RECONNECT_WAIT" envDefault:"10"`
-	ConnectTimeout         int    `yaml:"connect_timeout" env:"NATS_CONNECT_TIMEOUT" envDefault:"10"`
-	MaxWait                int    `yaml:"max_wait" env:"NATS_MAX_WAIT" envDefault:"10"`
-	PublishAsyncMaxPending int    `yaml:"publish_async_max_pending" env:"NATS_PUBLISH_ASYNC_MAX_PENDING" envDefault:"10"`
+	ClientName             string `yaml:"client_name"`
+	User                   string `yaml:"user"`
+	Password               string `yaml:"password"`
+	Server                 string `yaml:"server"`
+	MaxReconnect           int    `yaml:"max_reconnect"`
+	ReconnectWait          int    `yaml:"reconnect_wait"`
+	ConnectTimeout         int    `yaml:"connect_timeout"`
+	MaxWait                int    `yaml:"max_wait"`
+	PublishAsyncMaxPending int    `yaml:"publish_async_max_pending"`
 }
 
 type Subject struct {
-	Name         string       `yaml:"name" `
-	Queue        string       `yaml:"queue"`
-	UseBuffer    bool         `yaml:"use_buffer"`
-	TableName    string       `yaml:"table_name"`
-	BufferConfig BufferConfig `yaml:"buffer_config,omitempty"`
+	Name              string            `yaml:"name" `
+	Queue             string            `yaml:"queue"`
+	TableName         string            `yaml:"table_name"`
+	Async             bool              `yaml:"async"`
+	AsyncInsertConfig AsyncInsertConfig `yaml:"async_insert_config,omitempty"`
+	UseBuffer         bool              `yaml:"use_buffer"`
+	BufferConfig      BufferConfig      `yaml:"buffer_config,omitempty"`
+}
+
+type AsyncInsertConfig struct {
+	Wait bool `yaml:"wait,omitempty"`
 }
 
 type BufferConfig struct {
@@ -61,20 +69,22 @@ type BufferConfig struct {
 	MaxByteSize int `yaml:"max_byte_size,omitempty"`
 }
 
-func MustConfig() *Config {
-	configPath := os.Getenv("CONFIG_PATH")
+var configFile = flag.String("config", "", "Proxy configuration filename")
 
-	if configPath == "" {
-		configPath = "local.yaml"
+func MustConfig() *Config {
+	flag.Parse()
+
+	if *configFile == "" {
+		*configFile = "config/local.yaml"
 	}
 
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		panic(fmt.Sprintf("config file doesn't exist: %s", configPath))
+	if _, err := os.Stat(*configFile); os.IsNotExist(err) {
+		panic(fmt.Sprintf("config file doesn't exist: %s", *configFile))
 	}
 
 	var config Config
 
-	if err := cleanenv.ReadConfig(configPath, &config); err != nil {
+	if err := cleanenv.ReadConfig(*configFile, &config); err != nil {
 		panic(fmt.Sprintf("can't read config file: %s", err))
 	}
 

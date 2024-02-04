@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/Kebastos/NatsToCh/config"
-	"github.com/Kebastos/NatsToCh/log"
-	"github.com/Kebastos/NatsToCh/metrics"
+	"github.com/Kebastos/NatsToCh/internal/log"
+	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"strconv"
 )
 
@@ -28,6 +28,9 @@ func (c *ClickhouseClient) Connect() error {
 			Username: c.cfg.User,
 			Password: c.cfg.Password,
 		},
+		ConnMaxLifetime: c.cfg.ConnMaxLifetime,
+		MaxOpenConns:    c.cfg.MaxOpenConns,
+		MaxIdleConns:    c.cfg.MaxIdleConns,
 	})
 
 	if err != nil {
@@ -65,5 +68,20 @@ func (c *ClickhouseClient) BatchInsertToDefaultSchema(tableName string, data []i
 
 	metrics.InsertMessageCount.Add(float64(len(data)))
 
+	return nil
+}
+
+func (c *ClickhouseClient) AsyncInsertToDefaultSchema(tableName string, data []interface{}, wait bool, ctx context.Context) error {
+	if len(data) == 0 {
+		return fmt.Errorf("no data provided")
+	}
+
+	query := fmt.Sprintf("INSERT INTO %s VALUES (@Subject, @CreateDateTime, @Content)", tableName)
+	err := c.conn.AsyncInsert(ctx, query, wait, data...)
+	if err != nil {
+		return err
+	}
+
+	metrics.InsertMessageCount.Add(float64(len(data)))
 	return nil
 }
