@@ -3,8 +3,8 @@ package clients
 import (
 	"fmt"
 	"github.com/Kebastos/NatsToCh/config"
-	"github.com/Kebastos/NatsToCh/log"
-	"github.com/Kebastos/NatsToCh/metrics"
+	"github.com/Kebastos/NatsToCh/internal/log"
+	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"github.com/nats-io/nats.go"
 	"sync"
 	"time"

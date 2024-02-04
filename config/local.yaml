@@ -1,0 +1,45 @@
+server:
+  env: local
+  namespace: natstoch
+  debug: true
+  http:
+    listen_addr: ":9098"
+
+clickhouse:
+  host: localhost
+  port: 9000
+  db: ch_cash
+  user: clickhouse
+  password: qwerty
+  conn_max_lifetime: 4s
+  max_open_conns: 10
+  MaxIdleConns: 10
+
+nats:
+  client_name: nats_to_ch
+  server: nats://localhost:4222
+  max_reconnect: -1
+  reconnect_wait: 10
+  connect_timeout: 10
+  user: localuser
+  password: localpassword
+  max_wait: 10
+  publish_async_max_pending: 10
+
+subjects: [
+  {
+    name: "test",
+    queue: "testQueue",
+    table_name: "testCash",
+    use_buffer: false,
+    async: true,
+    async_insert_config: {
+      wait: false
+    }
+  },
+  {
+    name: "test1",
+    queue: "test1Queue",
+    table_name: "test1Cash",
+  }
+]

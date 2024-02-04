@@ -9,10 +9,11 @@ clickhouse:
   host: localhost
   port: 9000
   db: ch_cash
-  user: clickhouse
+  user: clickhouse_me
   password: qwerty
-  timeout: 4s
-  idle_timeout: 60s
+  conn_max_lifetime: 4s
+  max_open_conns: 10
+  MaxIdleConns: 10
 
 nats:
   client_name: nats_to_ch
@@ -30,7 +31,11 @@ subjects: [
       name: "test",
       queue: "testQueue",
       table_name: "testCash",
-      use_buffer: false
+      use_buffer: false,
+      async: true,
+      async_insert_config: {
+        wait: false
+      }
     },
     {
       name: "test1",

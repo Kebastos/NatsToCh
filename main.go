@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/Kebastos/NatsToCh/clients"
 	"github.com/Kebastos/NatsToCh/config"
-	"github.com/Kebastos/NatsToCh/log"
-	"github.com/Kebastos/NatsToCh/metrics"
-	"github.com/Kebastos/NatsToCh/workers"
+	clients2 "github.com/Kebastos/NatsToCh/internal/clients"
+	"github.com/Kebastos/NatsToCh/internal/log"
+	"github.com/Kebastos/NatsToCh/internal/metrics"
+	"github.com/Kebastos/NatsToCh/internal/workers"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 )
@@ -31,13 +31,13 @@ func main() {
 
 	log.Infof("http server is starting at address: %s", cfg.Server.HTTP.ListenAddr)
 
-	natsClient := clients.NewNatsClient(&cfg.NATSConfig)
+	natsClient := clients2.NewNatsClient(&cfg.NATSConfig)
 	err := natsClient.Connect()
 	if err != nil {
 		log.Fatalf("failed to connect to NATS server. %s", err)
 	}
 
-	chClient := clients.NewClickhouseClient(&cfg.CHConfig)
+	chClient := clients2.NewClickhouseClient(&cfg.CHConfig)
 	if err = chClient.Connect(); err != nil {
 		log.Fatalf("failed to connect to ClickHouse. %s", err)
 	}
