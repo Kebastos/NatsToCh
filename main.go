@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	clients2 "github.com/Kebastos/NatsToCh/internal/clients"
+	"github.com/Kebastos/NatsToCh/internal/clients"
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/metrics"
@@ -17,6 +17,12 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	if err := runServer(ctx); err != nil {
+		log.Fatalf("failed to run server: %s", err)
+	}
+}
+
+func runServer(ctx context.Context) error {
 	log.Infof("loading config...")
 	cfg := config.MustConfig()
 
@@ -37,13 +43,13 @@ func main() {
 
 	log.Infof("http server is starting at address: %s", cfg.Server.HTTP.ListenAddr)
 
-	natsClient := clients2.NewNatsClient(&cfg.NATSConfig)
+	natsClient := clients.NewNatsClient(&cfg.NATSConfig)
 	err := natsClient.Connect()
 	if err != nil {
 		log.Fatalf("failed to connect to NATS server. %s", err)
 	}
 
-	chClient := clients2.NewClickhouseClient(&cfg.CHConfig)
+	chClient := clients.NewClickhouseClient(&cfg.CHConfig)
 	if err = chClient.Connect(); err != nil {
 		log.Fatalf("failed to connect to ClickHouse. %s", err)
 	}
@@ -54,6 +60,9 @@ func main() {
 	}
 
 	log.Infof("application start")
+
+	<-ctx.Done()
+	log.Infof("shutting down server gracefully")
 
 	select {}
 }

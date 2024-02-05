@@ -26,7 +26,7 @@ func (c *ClickhouseWorker) Start(ctx context.Context) {
 			select {
 			case items := <-c.c:
 				if len(items) > 0 {
-					err := c.ch.BatchInsertToDefaultSchema(c.cfg.TableName, items, ctx)
+					err := c.ch.BatchInsertToDefaultSchema(ctx, c.cfg.TableName, items)
 					if err != nil {
 						log.Errorf("failed to insert data to clickhouse: %s", err)
 					}

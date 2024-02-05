@@ -12,8 +12,8 @@ import (
 )
 
 type ClickhouseStorage interface {
-	BatchInsertToDefaultSchema(tableName string, data []interface{}, ctx context.Context) error
-	AsyncInsertToDefaultSchema(tableName string, data []interface{}, wait bool, ctx context.Context) error
+	BatchInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}) error
+	AsyncInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}, wait bool) error
 }
 
 type NatsWorker struct {
@@ -37,9 +37,9 @@ func (n *NatsWorker) Start(ctx context.Context) error {
 		if s.UseBuffer {
 			err = n.subsWithBuffer(ctx, s.Name, s)
 		} else if s.Async {
-			err = n.subsNoBufferAsync(s.Name, s.TableName, s.AsyncInsertConfig.Wait)
+			err = n.subsNoBufferAsync(ctx, s.Name, s.TableName, s.AsyncInsertConfig.Wait)
 		} else {
-			err = n.subsNoBuffer(s.Name, s.TableName)
+			err = n.subsNoBuffer(ctx, s.Name, s.TableName)
 		}
 
 		if err != nil {
@@ -75,7 +75,7 @@ func (n *NatsWorker) subsWithBuffer(ctx context.Context, subject string, cfg con
 	return err
 }
 
-func (n *NatsWorker) subsNoBuffer(subject string, table string) error {
+func (n *NatsWorker) subsNoBuffer(ctx context.Context, subject string, table string) error {
 	callback := func(m *nats.Msg) {
 		msg := string(m.Data)
 
@@ -85,7 +85,7 @@ func (n *NatsWorker) subsNoBuffer(subject string, table string) error {
 			Content:        msg,
 		}
 
-		err := n.ch.BatchInsertToDefaultSchema(table, []interface{}{entity}, context.Background())
+		err := n.ch.BatchInsertToDefaultSchema(ctx, table, []interface{}{entity})
 		if err != nil {
 			log.Errorf("failed to insert data to clickhouse. %s", err)
 		}
@@ -96,7 +96,7 @@ func (n *NatsWorker) subsNoBuffer(subject string, table string) error {
 	return err
 }
 
-func (n *NatsWorker) subsNoBufferAsync(subject string, table string, wait bool) error {
+func (n *NatsWorker) subsNoBufferAsync(ctx context.Context, subject string, table string, wait bool) error {
 	callback := func(m *nats.Msg) {
 		msg := string(m.Data)
 
@@ -106,7 +106,7 @@ func (n *NatsWorker) subsNoBufferAsync(subject string, table string, wait bool) 
 			Content:        msg,
 		}
 
-		err := n.ch.AsyncInsertToDefaultSchema(table, []interface{}{entity}, wait, context.Background())
+		err := n.ch.AsyncInsertToDefaultSchema(ctx, table, []interface{}{entity}, wait)
 		if err != nil {
 			log.Errorf("failed to insert data to clickhouse. %s", err)
 		}
