@@ -5,10 +5,6 @@ import (
 )
 
 var (
-	statusCodes        *prometheus.CounterVec
-	concurrentQueries  *prometheus.GaugeVec
-	requestDuration    *prometheus.SummaryVec
-	configSuccess      prometheus.Gauge
 	GotMessageCount    prometheus.Counter
 	InsertMessageCount prometheus.Counter
 )
@@ -25,5 +21,5 @@ func MustRegister() {
 		Help:      "Total number of inserted messages",
 	})
 
-	prometheus.MustRegister(statusCodes, concurrentQueries, requestDuration, configSuccess, GotMessageCount, InsertMessageCount)
+	prometheus.MustRegister(GotMessageCount, InsertMessageCount)
 }

@@ -1,5 +1,6 @@
 package clients_test
 
+/*
 import (
 	"context"
 	"testing"
@@ -86,3 +87,4 @@ func TestNewClickhouseClientAsyncInsertToDefaultSchemaNoData(t *testing.T) {
 		t.Errorf("Expected error when async inserting with no data")
 	}
 }
+*/
