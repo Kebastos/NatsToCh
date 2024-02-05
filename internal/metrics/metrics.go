@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"github.com/Kebastos/NatsToCh/config"
+	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

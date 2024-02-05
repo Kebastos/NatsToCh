@@ -40,7 +40,12 @@ subjects: [
     {
       name: "test1",
       queue: "test1Queue",
-      table_name: "test1Cash",
-      use_buffer: false
+      table_name: "testCash",
+      use_buffer: true,
+      buffer_config: {
+        max_size: 10,
+        max_wait: 60s,
+        max_byte_size: 1000
+      },
     }
 ]

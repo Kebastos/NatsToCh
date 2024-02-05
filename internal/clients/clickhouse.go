@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/Kebastos/NatsToCh/config"
+	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"strconv"
@@ -46,7 +46,7 @@ func (c *ClickhouseClient) Connect() error {
 	return nil
 }
 
-func (c *ClickhouseClient) BatchInsertToDefaultSchema(tableName string, data []interface{}, ctx context.Context) error {
+func (c *ClickhouseClient) BatchInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}) error {
 	query := fmt.Sprintf("INSERT INTO %s", tableName)
 
 	batch, err := c.conn.PrepareBatch(ctx, query)
@@ -71,7 +71,7 @@ func (c *ClickhouseClient) BatchInsertToDefaultSchema(tableName string, data []i
 	return nil
 }
 
-func (c *ClickhouseClient) AsyncInsertToDefaultSchema(tableName string, data []interface{}, wait bool, ctx context.Context) error {
+func (c *ClickhouseClient) AsyncInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}, wait bool) error {
 	if len(data) == 0 {
 		return fmt.Errorf("no data provided")
 	}
