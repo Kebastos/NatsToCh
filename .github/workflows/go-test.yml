@@ -30,7 +30,7 @@ jobs:
       run: go test -v ./...
 
     - name: Update coverage report
-      uses: ncruces/go-coverage-report@0
+      uses: ncruces/go-coverage-report@v0
       with:
         report: 'false'
         chart: 'true'
