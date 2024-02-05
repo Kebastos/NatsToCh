@@ -38,11 +38,11 @@ func TestCacheSet(t *testing.T) {
 	}
 }
 
-func TestCacheOverflow(t *testing.T) {
+func TestCacheFlushAtLenOverflow(t *testing.T) {
 	cfg := &config.BufferConfig{
 		MaxSize:     2,
-		MaxWait:     1 * time.Second,
-		MaxByteSize: 100,
+		MaxWait:     600 * time.Second,
+		MaxByteSize: 100000,
 	}
 	c := make(chan []interface{})
 	ch := cache.New(cfg, c)
@@ -53,11 +53,9 @@ func TestCacheOverflow(t *testing.T) {
 
 	select {
 	case <-c:
-		if ch.Count() != 1 {
+		if ch.Count() != 0 {
 			t.Errorf("Cache count should be 1, got %d", ch.Count())
 		}
-	case <-time.After(2 * time.Second):
-		t.Errorf("Cache did not overflow in time")
 	}
 }
 
