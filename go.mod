@@ -1,6 +1,6 @@
 module github.com/Kebastos/NatsToCh
 
-go 1.21.6
+go 1.21
 
 require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
