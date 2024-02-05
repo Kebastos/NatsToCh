@@ -2,7 +2,7 @@ package clients
 
 import (
 	"fmt"
-	"github.com/Kebastos/NatsToCh/config"
+	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"github.com/nats-io/nats.go"

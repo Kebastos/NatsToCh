@@ -1,16 +1,22 @@
 package main
 
 import (
-	"github.com/Kebastos/NatsToCh/config"
+	"context"
 	clients2 "github.com/Kebastos/NatsToCh/internal/clients"
+	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"github.com/Kebastos/NatsToCh/internal/workers"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	log.Infof("loading config...")
 	cfg := config.MustConfig()
 
@@ -43,7 +49,7 @@ func main() {
 	}
 
 	natsWorker := workers.NewNatsWorker(cfg, natsClient, chClient)
-	if err = natsWorker.Start(); err != nil {
+	if err = natsWorker.Start(ctx); err != nil {
 		log.Fatalf("failed to start nats worker. %s", err)
 	}
 

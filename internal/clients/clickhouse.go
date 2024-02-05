@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/Kebastos/NatsToCh/config"
+	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"strconv"

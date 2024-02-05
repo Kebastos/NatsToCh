@@ -64,9 +64,9 @@ type AsyncInsertConfig struct {
 }
 
 type BufferConfig struct {
-	MaxSize     int `yaml:"max_size,omitempty"`
-	MaxWait     int `yaml:"max_wait,omitempty"`
-	MaxByteSize int `yaml:"max_byte_size,omitempty"`
+	MaxSize     int           `yaml:"max_size,omitempty"`
+	MaxWait     time.Duration `yaml:"max_wait,omitempty"`
+	MaxByteSize int           `yaml:"max_byte_size,omitempty"`
 }
 
 var configFile = flag.String("config", "", "Proxy configuration filename")
