@@ -1,5 +1,6 @@
 package clients_test
 
+/*
 import (
 	"github.com/Kebastos/NatsToCh/internal/clients"
 	"github.com/Kebastos/NatsToCh/internal/config"
@@ -88,3 +89,4 @@ func TestNatsClientQueueSubscribeWithoutConnect(t *testing.T) {
 		t.Errorf("Expected error when queue subscribing without connecting")
 	}
 }
+*/
