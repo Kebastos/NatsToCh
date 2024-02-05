@@ -31,7 +31,7 @@ func runServer(ctx context.Context) error {
 		log.Debugf("debug mode run")
 	}
 
-	metrics.MustRegister(cfg)
+	metrics.MustRegister()
 	log.Infof("metrics registered")
 
 	server := cfg.Server

@@ -46,38 +46,15 @@ func (c *Cache) Count() int {
 }
 
 func (c *Cache) startCleaner() {
-	go c.cleanBySize()
-	go c.cleanByteSize()
-	go c.cleanByTime()
+	go c.clean(func() bool { return len(c.items) > c.maxSize }, "size")
+	go c.clean(func() bool { return cap(c.items) > c.maxByteSize }, "byte size")
+	go c.clean(func() bool { <-time.After(c.maxWait); return true }, "time")
 }
 
-func (c *Cache) cleanByTime() {
+func (c *Cache) clean(condition func() bool, cleanType string) {
 	for {
-		<-time.After(c.maxWait)
-
-		log.Debugf("cleanup by time complite")
-		c.c <- c.items
-		c.items = make([]interface{}, 0)
-	}
-}
-
-func (c *Cache) cleanBySize() {
-	for {
-		if len(c.items) > c.maxSize {
-			log.Debugf("cleanup by size complite")
-			c.c <- c.items
-			c.items = make([]interface{}, 0)
-		} else {
-			time.Sleep(5 * time.Second)
-		}
-	}
-}
-
-func (c *Cache) cleanByteSize() {
-	for {
-		size := cap(c.items)
-		if size > c.maxByteSize {
-			log.Debugf("cleanup by byte size complite")
+		if condition() {
+			log.Debugf("cleanup by %s complete", cleanType)
 			c.c <- c.items
 			c.items = make([]interface{}, 0)
 		} else {
