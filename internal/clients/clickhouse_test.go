@@ -1,6 +1,5 @@
 package clients_test
 
-/*
 import (
 	"context"
 	"testing"
@@ -40,9 +39,12 @@ func TestNewClickhouseClientBatchInsertToDefaultSchema(t *testing.T) {
 		MaxIdleConns:    5,
 	}
 	client := clients.NewClickhouseClient(cfg)
-	client.Connect()
+	err := client.Connect()
+	if err != nil {
+		t.Errorf("failed to connect to Clickhouse server: %s", err)
+	}
 
-	err := client.BatchInsertToDefaultSchema(context.Background(), "test_table", []interface{}{"test_data"})
+	err = client.BatchInsertToDefaultSchema(context.Background(), "test_table", []interface{}{"test_data"})
 	if err != nil {
 		t.Errorf("Failed to batch insert to default schema: %s", err)
 	}
@@ -60,9 +62,12 @@ func TestNewClickhouseClientAsyncInsertToDefaultSchema(t *testing.T) {
 		MaxIdleConns:    5,
 	}
 	client := clients.NewClickhouseClient(cfg)
-	client.Connect()
+	err := client.Connect()
+	if err != nil {
+		t.Errorf("failed to connect to Clickhouse server: %s", err)
+	}
 
-	err := client.AsyncInsertToDefaultSchema(context.Background(), "test_table", []interface{}{"test_data"}, true)
+	err = client.AsyncInsertToDefaultSchema(context.Background(), "test_table", []interface{}{"test_data"}, true)
 	if err != nil {
 		t.Errorf("Failed to async insert to default schema: %s", err)
 	}
@@ -80,11 +85,13 @@ func TestNewClickhouseClientAsyncInsertToDefaultSchemaNoData(t *testing.T) {
 		MaxIdleConns:    5,
 	}
 	client := clients.NewClickhouseClient(cfg)
-	client.Connect()
+	err := client.Connect()
+	if err != nil {
+		t.Errorf("failed to connect to Clickhouse server: %s", err)
+	}
 
-	err := client.AsyncInsertToDefaultSchema(context.Background(), "test_table", []interface{}{}, true)
+	err = client.AsyncInsertToDefaultSchema(context.Background(), "test_table", []interface{}{}, true)
 	if err == nil {
 		t.Errorf("Expected error when async inserting with no data")
 	}
 }
-*/
