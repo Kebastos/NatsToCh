@@ -37,17 +37,13 @@ jobs:
         sudo clickhouse-client --query "INSERT INTO test.test VALUES ('test', now(), 'test')"
         sudo clickhouse-client --query "SELECT * FROM test.test"
 
+    - name: Check out code
+      uses: actions/checkout@v4
+      
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.21'
-
-    - name: Set up Nats
-      run: |
-        go install github.com/nats-io/nats-server/v2@latest
-
-    - name: Check out code
-      uses: actions/checkout@v4
 
     - name: Build
       run: go build -v ./...
