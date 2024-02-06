@@ -34,11 +34,12 @@ func (n *NatsWorker) Start(ctx context.Context) error {
 	for _, s := range n.cfg.Subjects {
 		var err error
 
-		if s.UseBuffer {
+		switch {
+		case s.UseBuffer:
 			err = n.subsWithBuffer(ctx, s.Name, s)
-		} else if s.Async {
+		case s.Async:
 			err = n.subsNoBufferAsync(ctx, s.Name, s.TableName, s.AsyncInsertConfig.Wait)
-		} else {
+		default:
 			err = n.subsNoBuffer(ctx, s.Name, s.TableName)
 		}
 

@@ -1,0 +1,89 @@
+issues:
+  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
+  max-issues-per-linter: 0
+
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0
+
+  # Exclude by issue content
+  exclude:
+    - don't use an underscore in package name
+
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: cmd
+      linters:
+        - gci
+        - funlen
+    - path: migrations
+      linters:
+        - gochecknoinits
+        - dupl
+linters:
+  disable-all: true
+  enable:
+    - gocyclo
+    - contextcheck
+    - bodyclose
+    - govet
+    - errcheck
+    - errorlint
+    - staticcheck
+    - unused
+    - gosimple
+    - ineffassign
+    - typecheck
+    - revive
+    - gosec
+    - unconvert
+    - dupl
+    - goconst
+    - gofmt
+    - misspell
+    - lll
+    - unparam
+    - dogsled
+    - nakedret
+    - prealloc
+    - gocritic
+    - gochecknoinits
+    - godox
+    - whitespace
+    - funlen
+    - goprintffuncname
+    - exportloopref
+    - nestif
+
+# all available settings of specific linters
+linters-settings:
+  funlen:
+    lines: 150
+    statements: 80
+  errorlint:
+    errorf: true
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  gomnd:
+    settings:
+      mnd:
+        ignored-functions:
+          - strconv.*
+          - time.*
+          - flag.*
+  lll:
+    tab-width: 4
+    line-length: 160
+  revive:
+    rules:
+      - name: var-naming
+        arguments: [["ID", "UID", "UUID", "URL", "IP", "API", "HTTP"], []]
+  govet:
+    check-shadowing: true
+  misspell:
+    locale: US
+  nestif:
+    min-complexity: 5
+  nolintlint:
+    require-explanation: true
+    require-specific: true

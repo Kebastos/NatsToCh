@@ -23,7 +23,10 @@ type Server struct {
 }
 
 type HTTP struct {
-	ListenAddr string `yaml:"listen_addr,omitempty"`
+	ListenAddr   string        `yaml:"listen_addr"`
+	ReadTimeout  time.Duration `yaml:"read_timeout"`
+	WriteTimeout time.Duration `yaml:"write_timeout"`
+	IdleTimeout  time.Duration `yaml:"idle_timeout"`
 }
 
 type CHConfig struct {

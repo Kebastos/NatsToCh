@@ -51,11 +51,9 @@ func TestCacheFlushAtLenOverflow(t *testing.T) {
 	ch.Set("test2")
 	ch.Set("test3")
 
-	select {
-	case <-c:
-		if ch.Count() != 0 {
-			t.Errorf("Cache count should be 1, got %d", ch.Count())
-		}
+	<-c
+	if ch.Count() != 0 {
+		t.Errorf("Cache count should be 1, got %d", ch.Count())
 	}
 }
 

@@ -18,7 +18,7 @@ func main() {
 	defer stop()
 
 	if err := runServer(ctx); err != nil {
-		log.Fatalf("failed to run server: %s", err)
+		log.Errorf("failed to run server: %s", err)
 	}
 }
 
@@ -69,7 +69,15 @@ func runServer(ctx context.Context) error {
 
 func serveHTTP(cfg config.HTTP) {
 	http.Handle("/metrics", promhttp.Handler())
-	err := http.ListenAndServe(cfg.ListenAddr, nil)
+
+	server := &http.Server{
+		Addr:         cfg.ListenAddr,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		IdleTimeout:  cfg.IdleTimeout,
+	}
+
+	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatalf("failed to start http server. %s", err)
 	}
