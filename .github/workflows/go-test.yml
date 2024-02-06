@@ -15,6 +15,20 @@ jobs:
     name: gotest
     runs-on: ubuntu-latest
     steps:
+    - name: Setup Clickhouse
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y apt-transport-https dirmngr
+        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv E0C56BD4
+        sudo sh -c "echo 'deb https://repo.clickhouse.tech/deb/stable/ main/' > /etc/apt/sources.list.d/clickhouse.list"
+        sudo apt-get update
+        sudo apt-get install -y clickhouse-server clickhouse-client
+        sudo service clickhouse-server start
+        sudo clickhouse-client --query "CREATE DATABASE IF NOT EXISTS test"
+        sudo clickhouse-client --query "CREATE TABLE IF NOT EXISTS test.test (Subject String, CreateDateTime DateTime, Content String) ENGINE = Memory"
+        sudo clickhouse-client --query "INSERT INTO test.test VALUES ('test', now(), 'test')"
+        sudo clickhouse-client --query "SELECT * FROM test.test"
+
     - name: Check out code
       uses: actions/checkout@v4
 
