@@ -15,7 +15,7 @@ jobs:
     name: gotest
     runs-on: ubuntu-latest
     steps:
-    - name: Setup Clickhouse
+    - name: Set up Clickhouse
       run: |
         sudo apt-get install -y apt-transport-https ca-certificates dirmngr
         sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 8919F6BD2B48D754
@@ -28,6 +28,15 @@ jobs:
         sudo clickhouse-client --query "CREATE TABLE IF NOT EXISTS test.test (Subject String, CreateDateTime DateTime, Content String) ENGINE = Memory"
         sudo clickhouse-client --query "INSERT INTO test.test VALUES ('test', now(), 'test')"
         sudo clickhouse-client --query "SELECT * FROM test.test"
+
+    - name: Set up Nats
+      run: |
+        sudo apt-get install -y gnupg2
+        curl -s https://nats.io/nats-server/gpg/DE8F6C1E9D8EE5A6 | sudo apt-key add -
+        echo "deb https://apt.nats.io stable main" | sudo tee /etc/apt/sources.list.d/nats.sources.list
+        sudo apt-get update
+        sudo apt-get install -y nats-server
+        sudo service nats-server start
 
     - name: Check out code
       uses: actions/checkout@v4
