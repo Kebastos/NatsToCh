@@ -15,8 +15,12 @@ jobs:
     name: gotest
     runs-on: ubuntu-latest
     services:
-      mysql:
-        image: clickhouse:24.1
+      nats:
+        image: nats
+        ports: ['4222:4222']
+        
+      clickhouse:
+        image: clickhouse/clickhouse-server
         ports: ['9000:9000']
         
     steps:
