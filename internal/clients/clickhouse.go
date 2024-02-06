@@ -7,7 +7,10 @@ import (
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/metrics"
+	"github.com/Kebastos/NatsToCh/internal/models"
+	"reflect"
 	"strconv"
+	"strings"
 )
 
 type ClickhouseClient struct {
@@ -76,8 +79,34 @@ func (c *ClickhouseClient) AsyncInsertToDefaultSchema(ctx context.Context, table
 		return fmt.Errorf("no data provided")
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s VALUES (@Subject, @CreateDateTime, @Content)", tableName)
-	err := c.conn.AsyncInsert(ctx, query, wait, data...)
+	// Get the type of the struct
+	t := reflect.TypeOf(models.DefaultTable{})
+
+	// Prepare the query
+	var fields []string
+	var placeholders []string
+	for i := 0; i < t.NumField(); i++ {
+		fields = append(fields, t.Field(i).Name)
+		placeholders = append(placeholders, "?")
+	}
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(fields, ", "), strings.Join(placeholders, ", "))
+
+	// Prepare data for insertion
+	var insertData []interface{}
+	for _, d := range data {
+		v := reflect.ValueOf(d)
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
+
+		if v.Type() == reflect.TypeOf(models.DefaultTable{}) {
+			for _, field := range fields {
+				insertData = append(insertData, v.FieldByName(field).Interface())
+			}
+		}
+	}
+
+	err := c.conn.AsyncInsert(ctx, query, wait, insertData...)
 	if err != nil {
 		return err
 	}
