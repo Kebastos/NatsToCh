@@ -3,7 +3,6 @@ package workers
 import (
 	"context"
 	"github.com/Kebastos/NatsToCh/internal/cache"
-	client "github.com/Kebastos/NatsToCh/internal/clients"
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/models"
@@ -16,13 +15,17 @@ type ClickhouseStorage interface {
 	AsyncInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}, wait bool) error
 }
 
+type NatsSub interface {
+	Subscribe(subject string, handler func(msg *nats.Msg)) (*nats.Subscription, error)
+}
+
 type NatsWorker struct {
 	cfg *config.Config
-	sb  *client.NatsClient
+	sb  NatsSub
 	ch  ClickhouseStorage
 }
 
-func NewNatsWorker(cfg *config.Config, sb *client.NatsClient, ch ClickhouseStorage) *NatsWorker {
+func NewNatsWorker(cfg *config.Config, sb NatsSub, ch ClickhouseStorage) *NatsWorker {
 	return &NatsWorker{
 		cfg: cfg,
 		sb:  sb,

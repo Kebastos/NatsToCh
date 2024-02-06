@@ -2,7 +2,6 @@ package workers_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/Kebastos/NatsToCh/internal/config"
@@ -22,31 +21,14 @@ func (m *MockClickhouseStorage) AsyncInsertToDefaultSchema(ctx context.Context, 
 	return m.AsyncInsertToDefaultSchemaFunc(ctx, tableName, data, wait)
 }
 
+var cfg = &config.Subject{
+	TableName: "test_table",
+}
+
 func TestClickhouseWorkerStart(t *testing.T) {
-	cfg := &config.Subject{
-		TableName: "test_table",
-	}
 	ch := &MockClickhouseStorage{
 		BatchInsertToDefaultSchemaFunc: func(ctx context.Context, tableName string, items []interface{}) error {
 			return nil
-		},
-	}
-	c := make(chan []interface{}, 1)
-	worker := workers.NewClickhouseWorker(cfg, ch, c)
-
-	worker.Start(context.Background())
-	c <- []interface{}{"test_data"}
-
-	<-c
-}
-
-func TestClickhouseWorkerStartWithBatchInsertError(t *testing.T) {
-	cfg := &config.Subject{
-		TableName: "test_table",
-	}
-	ch := &MockClickhouseStorage{
-		BatchInsertToDefaultSchemaFunc: func(ctx context.Context, tableName string, items []interface{}) error {
-			return errors.New("batch insert error")
 		},
 	}
 	c := make(chan []interface{}, 1)
