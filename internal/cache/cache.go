@@ -9,6 +9,7 @@ import (
 
 type Cache struct {
 	sync.RWMutex
+	logger      *log.Log
 	maxSize     int
 	maxWait     time.Duration
 	maxByteSize int
@@ -17,11 +18,12 @@ type Cache struct {
 	c           chan []interface{}
 }
 
-func New(cfg *config.BufferConfig, c chan []interface{}) *Cache {
+func New(cfg *config.BufferConfig, logger *log.Log, c chan []interface{}) *Cache {
 	items := make([]interface{}, 0)
 
 	cache := Cache{
 		items:       items,
+		logger:      logger,
 		maxSize:     cfg.MaxSize,
 		maxWait:     cfg.MaxWait,
 		maxByteSize: cfg.MaxByteSize,
@@ -54,7 +56,7 @@ func (c *Cache) startCleaner() {
 func (c *Cache) clean(condition func() bool, cleanType string) {
 	for {
 		if condition() {
-			log.Debugf("cleanup by %s complete", cleanType)
+			c.logger.Debugf("cleanup by %s complete", cleanType)
 			c.c <- c.items
 			c.items = make([]interface{}, 0)
 		} else {

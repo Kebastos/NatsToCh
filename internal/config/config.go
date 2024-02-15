@@ -9,20 +9,14 @@ import (
 )
 
 type Config struct {
-	Server     Server
+	Debug      bool       `yaml:"debug"`
+	HTTPConfig HTTPConfig `yaml:"http"`
 	NATSConfig NATSConfig `yaml:"nats"`
 	CHConfig   CHConfig   `yaml:"clickhouse"`
 	Subjects   []Subject  `yaml:"subjects"`
 }
 
-type Server struct {
-	Env       string `yaml:"env"`
-	Namespace string `yaml:"namespace"`
-	Debug     bool   `yaml:"debug"`
-	HTTP      HTTP   `yaml:"http"`
-}
-
-type HTTP struct {
+type HTTPConfig struct {
 	ListenAddr   string        `yaml:"listen_addr"`
 	ReadTimeout  time.Duration `yaml:"read_timeout"`
 	WriteTimeout time.Duration `yaml:"write_timeout"`
@@ -74,7 +68,7 @@ type BufferConfig struct {
 
 var configFile = flag.String("config", "", "Proxy configuration filename")
 
-func MustConfig() *Config {
+func NewConfig() (*Config, error) {
 	flag.Parse()
 
 	if *configFile == "" {
@@ -82,14 +76,14 @@ func MustConfig() *Config {
 	}
 
 	if _, err := os.Stat(*configFile); os.IsNotExist(err) {
-		panic(fmt.Sprintf("config file doesn't exist: %s", *configFile))
+		return nil, fmt.Errorf(fmt.Sprintf("config file doesn't exist: %s", *configFile))
 	}
 
 	var config Config
 
 	if err := cleanenv.ReadConfig(*configFile, &config); err != nil {
-		panic(fmt.Sprintf("can't read config file: %s", err))
+		return nil, err
 	}
 
-	return &config
+	return &config, nil
 }

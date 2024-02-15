@@ -6,79 +6,60 @@ import (
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/metrics"
+	"github.com/Kebastos/NatsToCh/internal/server"
 	"github.com/Kebastos/NatsToCh/internal/workers"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"net/http"
 	"os/signal"
 	"syscall"
 )
+
+var Version = "0.0.0"
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	if err := runServer(ctx); err != nil {
-		log.Errorf("failed to run server: %s", err)
+	logger := log.MustConfig()
+
+	logger.Infof("loading config...")
+	cfg, err := config.NewConfig()
+	if err != nil {
+		logger.Fatalf("failed to read config. %s", err)
 	}
-}
-
-func runServer(ctx context.Context) error {
-	log.Infof("loading config...")
-	cfg := config.MustConfig()
-
-	if cfg.Server.Debug {
-		log.SetDebug(cfg.Server.Debug)
-		log.Debugf("debug mode run")
+	if cfg.Debug {
+		logger.SetDebug(cfg.Debug)
+		logger.Debugf("debug mode run")
 	}
 
 	metrics.MustRegister()
-	log.Infof("metrics registered")
 
-	server := cfg.Server
-	if len(server.HTTP.ListenAddr) == 0 {
-		panic("wrong config section - `listen_addr` is not configured")
-	}
+	httpServer := server.NewHTTPServer(&cfg.HTTPConfig, logger)
+	go httpServer.Serve()
 
-	go serveHTTP(server.HTTP)
-
-	log.Infof("http server is starting at address: %s", cfg.Server.HTTP.ListenAddr)
-
-	natsClient := clients.NewNatsClient(&cfg.NATSConfig)
-	err := natsClient.Connect()
+	natsClient := clients.NewNatsClient(&cfg.NATSConfig, logger)
+	err = natsClient.Connect()
 	if err != nil {
-		log.Fatalf("failed to connect to NATS server. %s", err)
+		logger.Fatalf("failed to connect to NATS server. %s", err)
 	}
 
-	chClient := clients.NewClickhouseClient(&cfg.CHConfig)
+	chClient := clients.NewClickhouseClient(&cfg.CHConfig, logger)
 	if err = chClient.Connect(); err != nil {
-		log.Fatalf("failed to connect to ClickHouse. %s", err)
+		logger.Fatalf("failed to connect to ClickHouse. %s", err)
 	}
 
 	natsWorker := workers.NewNatsWorker(cfg, natsClient, chClient)
 	if err = natsWorker.Start(ctx); err != nil {
-		log.Fatalf("failed to start nats worker. %s", err)
+		logger.Fatalf("failed to start nats worker. %s", err)
 	}
 
-	log.Infof("application start")
-
-	<-ctx.Done()
-	log.Infof("shutting down server gracefully")
-
+	go func() {
+		<-ctx.Done()
+		logger.Infof("shutting down...")
+		natsClient.Shutdown()
+		err := httpServer.Shutdown(ctx)
+		if err != nil {
+			logger.Fatalf("failed to shutdown http server. %s", err)
+		}
+	}()
+	logger.Infof("application started. version - %s", Version)
 	select {}
-}
-
-func serveHTTP(cfg config.HTTP) {
-	http.Handle("/metrics", promhttp.Handler())
-
-	server := &http.Server{
-		Addr:         cfg.ListenAddr,
-		ReadTimeout:  cfg.ReadTimeout,
-		WriteTimeout: cfg.WriteTimeout,
-		IdleTimeout:  cfg.IdleTimeout,
-	}
-
-	err := server.ListenAndServe()
-	if err != nil {
-		log.Fatalf("failed to start http server. %s", err)
-	}
 }

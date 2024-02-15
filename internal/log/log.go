@@ -2,78 +2,46 @@ package log
 
 import (
 	"fmt"
-	"io"
-	"log"
+	"log/slog"
 	"os"
-	"sync/atomic"
 )
 
-var (
-	stdLogFlags     = log.LstdFlags | log.Lshortfile | log.LUTC
-	outputCallDepth = 2
+type Log struct {
+	log *slog.Logger
+}
 
-	debugLogger = log.New(os.Stderr, "DEBUG: ", stdLogFlags)
-	infoLogger  = log.New(os.Stderr, "INFO: ", stdLogFlags)
-	errorLogger = log.New(os.Stderr, "ERROR: ", stdLogFlags)
-	fatalLogger = log.New(os.Stderr, "FATAL: ", stdLogFlags)
+func MustConfig() *Log {
+	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 
-	// NilLogger suppresses all the log messages.
-	NilLogger = log.New(io.Discard, "", stdLogFlags)
-)
-
-func SuppressOutput(suppress bool) {
-	if suppress {
-		debugLogger.SetOutput(io.Discard)
-		infoLogger.SetOutput(io.Discard)
-		errorLogger.SetOutput(io.Discard)
-	} else {
-		debugLogger.SetOutput(os.Stderr)
-		infoLogger.SetOutput(os.Stderr)
-		errorLogger.SetOutput(os.Stderr)
+	return &Log{
+		log: log,
 	}
 }
 
-var debug uint32
-
-// SetDebug sets output into debug mode if true passed
-func SetDebug(val bool) {
-	if val {
-		atomic.StoreUint32(&debug, 1)
+func (l *Log) SetDebug(d bool) {
+	if d {
+		l.log.Handler().Enabled(nil, slog.LevelDebug)
 	} else {
-		atomic.StoreUint32(&debug, 0)
+		l.log.Handler().Enabled(nil, slog.LevelInfo)
 	}
 }
 
-// Debugf prints debug message according to a format
-func Debugf(format string, args ...interface{}) {
-	if atomic.LoadUint32(&debug) == 0 {
-		return
-	}
-	s := fmt.Sprintf(format, args...)
-	debugLogger.Output(outputCallDepth, s) // nolint
+func (l *Log) Debugf(format string, args ...interface{}) {
+	l.log.Debug(fmt.Sprintf(format, args...))
 }
 
 // Infof prints info message according to a format
-func Infof(format string, args ...interface{}) {
-	s := fmt.Sprintf(format, args...)
-	infoLogger.Output(outputCallDepth, s) // nolint
+func (l *Log) Infof(format string, args ...interface{}) {
+	l.log.Info(fmt.Sprintf(format, args...))
 }
 
 // Errorf prints warning message according to a format
-func Errorf(format string, args ...interface{}) {
-	s := fmt.Sprintf(format, args...)
-	errorLogger.Output(outputCallDepth, s) // nolint
-}
-
-// ErrorWithCallDepth prints err into error log using the given callDepth.
-func ErrorWithCallDepth(err error, callDepth int) {
-	s := err.Error()
-	errorLogger.Output(outputCallDepth+callDepth, s) //nolint
+func (l *Log) Errorf(format string, args ...interface{}) {
+	l.log.Error(fmt.Sprintf(format, args...))
 }
 
 // Fatalf prints fatal message according to a format and exits program
-func Fatalf(format string, args ...interface{}) {
-	s := fmt.Sprintf(format, args...)
-	fatalLogger.Output(outputCallDepth, s) // nolint
+func (l *Log) Fatalf(format string, args ...interface{}) {
+	l.log.Error(fmt.Sprintf(format, args...))
 	os.Exit(1)
 }

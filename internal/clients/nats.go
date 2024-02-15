@@ -11,14 +11,16 @@ import (
 )
 
 type NatsClient struct {
-	mx  sync.Mutex
-	cfg *config.NATSConfig
-	nc  *nats.Conn
+	mx     sync.Mutex
+	cfg    *config.NATSConfig
+	nc     *nats.Conn
+	logger *log.Log
 }
 
-func NewNatsClient(cfg *config.NATSConfig) *NatsClient {
+func NewNatsClient(cfg *config.NATSConfig, logger *log.Log) *NatsClient {
 	return &NatsClient{
-		cfg: cfg,
+		cfg:    cfg,
+		logger: logger,
 	}
 }
 
@@ -32,19 +34,19 @@ func (c *NatsClient) Connect() error {
 		nats.ReconnectWait(time.Duration(c.cfg.ReconnectWait) * time.Millisecond),
 		nats.Timeout(time.Duration(c.cfg.ConnectTimeout) * time.Millisecond),
 		nats.ErrorHandler(func(nc *nats.Conn, sub *nats.Subscription, err error) {
-			log.Errorf("NATS error: %s\n", err)
+			c.logger.Errorf("NATS error: %s\n", err)
 		}),
 		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
-			log.Errorf("NATS disconnected: %s\n", err)
+			c.logger.Errorf("NATS disconnected: %s\n", err)
 		}),
 		nats.ReconnectHandler(func(nc *nats.Conn) {
-			log.Infof("NATS reconnected")
+			c.logger.Infof("NATS reconnected")
 		}),
 		nats.ClosedHandler(func(nc *nats.Conn) {
-			log.Errorf("NATS connection closed")
+			c.logger.Errorf("NATS connection closed")
 		}),
 		nats.ConnectHandler(func(nc *nats.Conn) {
-			log.Infof("NATS connected")
+			c.logger.Infof("NATS connected")
 		}),
 		nats.NoCallbacksAfterClientClose(),
 	}
@@ -56,6 +58,21 @@ func (c *NatsClient) Connect() error {
 
 	c.nc = nc
 	return nil
+}
+
+func (c *NatsClient) Shutdown() {
+	c.mx.Lock()
+	defer c.mx.Unlock()
+
+	if c.nc != nil {
+		err := c.nc.Drain()
+		if err != nil {
+			c.logger.Fatalf("failed to drain NATS connection: %s", err)
+		}
+		c.nc.Close()
+	}
+
+	c.logger.Infof("nats client was disconnected")
 }
 
 func (c *NatsClient) Subscribe(subject string, handler func(msg *nats.Msg)) (*nats.Subscription, error) {

@@ -14,12 +14,13 @@ import (
 )
 
 type ClickhouseClient struct {
-	cfg  config.CHConfig
-	conn clickhouse.Conn
+	cfg    config.CHConfig
+	logger *log.Log
+	conn   clickhouse.Conn
 }
 
-func NewClickhouseClient(cfg *config.CHConfig) *ClickhouseClient {
-	return &ClickhouseClient{cfg: *cfg}
+func NewClickhouseClient(cfg *config.CHConfig, logger *log.Log) *ClickhouseClient {
+	return &ClickhouseClient{cfg: *cfg, logger: logger}
 }
 
 func (c *ClickhouseClient) Connect() error {
@@ -45,8 +46,12 @@ func (c *ClickhouseClient) Connect() error {
 		return err
 	}
 
-	log.Infof("connected to clickhouse %s with %s", c.cfg.Host, version)
+	c.logger.Infof("connected to clickhouse %s with %s", c.cfg.Host, version)
 	return nil
+}
+
+func (c *ClickhouseClient) Shutdown() error {
+	return c.conn.Close()
 }
 
 func (c *ClickhouseClient) BatchInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}) error {

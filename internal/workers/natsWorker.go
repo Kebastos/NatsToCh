@@ -17,6 +17,7 @@ type ClickhouseStorage interface {
 
 type NatsSub interface {
 	Subscribe(subject string, handler func(msg *nats.Msg)) (*nats.Subscription, error)
+	QueueSubscribe(subject string, queue string, handler func(msg *nats.Msg)) (*nats.Subscription, error)
 }
 
 type NatsWorker struct {
@@ -35,17 +36,17 @@ func NewNatsWorker(cfg *config.Config, sb NatsSub, ch ClickhouseStorage) *NatsWo
 
 func (n *NatsWorker) Start(ctx context.Context) error {
 	for _, s := range n.cfg.Subjects {
-		var err error
-
+		var c func(m *nats.Msg)
 		switch {
 		case s.UseBuffer:
-			err = n.subsWithBuffer(ctx, s.Name, s)
+			c = n.callbackWithBuffer(ctx, s)
 		case s.Async:
-			err = n.subsNoBufferAsync(ctx, s.Name, s.TableName, s.AsyncInsertConfig.Wait)
+			c = n.callbackNoBufferAsync(ctx, s.TableName, s.AsyncInsertConfig.Wait)
 		default:
-			err = n.subsNoBuffer(ctx, s.Name, s.TableName)
+			c = n.callbackNoBuffer(ctx, s.TableName)
 		}
 
+		err := n.subs(ctx, s, c)
 		if err != nil {
 			return err
 		}
@@ -56,7 +57,18 @@ func (n *NatsWorker) Start(ctx context.Context) error {
 	return nil
 }
 
-func (n *NatsWorker) subsWithBuffer(ctx context.Context, subject string, cfg config.Subject) error {
+func (n *NatsWorker) subs(ctx context.Context, cfg config.Subject, f func(m *nats.Msg)) error {
+	var err error
+	if cfg.Queue != "" {
+		_, err = n.sb.QueueSubscribe(cfg.Name, cfg.Queue, f)
+	} else {
+		_, err = n.sb.Subscribe(cfg.Name, f)
+	}
+
+	return err
+}
+
+func (n *NatsWorker) callbackWithBuffer(ctx context.Context, cfg config.Subject) func(m *nats.Msg) {
 	c := make(chan []interface{}, 1)
 	cc := cache.New(&cfg.BufferConfig, c)
 	cw := NewClickhouseWorker(&cfg, n.ch, c)
@@ -74,12 +86,10 @@ func (n *NatsWorker) subsWithBuffer(ctx context.Context, subject string, cfg con
 		cc.Set(entity)
 	}
 
-	_, err := n.sb.Subscribe(subject, callback)
-
-	return err
+	return callback
 }
 
-func (n *NatsWorker) subsNoBuffer(ctx context.Context, subject string, table string) error {
+func (n *NatsWorker) callbackNoBuffer(ctx context.Context, table string) func(m *nats.Msg) {
 	callback := func(m *nats.Msg) {
 		msg := string(m.Data)
 
@@ -95,12 +105,10 @@ func (n *NatsWorker) subsNoBuffer(ctx context.Context, subject string, table str
 		}
 	}
 
-	_, err := n.sb.Subscribe(subject, callback)
-
-	return err
+	return callback
 }
 
-func (n *NatsWorker) subsNoBufferAsync(ctx context.Context, subject string, table string, wait bool) error {
+func (n *NatsWorker) callbackNoBufferAsync(ctx context.Context, table string, wait bool) func(m *nats.Msg) {
 	callback := func(m *nats.Msg) {
 		msg := string(m.Data)
 
@@ -116,7 +124,5 @@ func (n *NatsWorker) subsNoBufferAsync(ctx context.Context, subject string, tabl
 		}
 	}
 
-	_, err := n.sb.Subscribe(subject, callback)
-
-	return err
+	return callback
 }
