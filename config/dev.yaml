@@ -24,7 +24,6 @@ nats:
   user: localuser
   password: localpassword
   max_wait: 10
-  publish_async_max_pending: 10
 
 subjects: [
     {

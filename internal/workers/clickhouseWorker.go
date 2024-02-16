@@ -7,16 +7,18 @@ import (
 )
 
 type ClickhouseWorker struct {
-	cfg *config.Subject
-	ch  ClickhouseStorage
-	c   chan []interface{}
+	cfg    *config.Subject
+	ch     ClickhouseStorage
+	c      chan []interface{}
+	logger *log.Log
 }
 
-func NewClickhouseWorker(cfg *config.Subject, ch ClickhouseStorage, c chan []interface{}) *ClickhouseWorker {
+func NewClickhouseWorker(cfg *config.Subject, ch ClickhouseStorage, c chan []interface{}, logger *log.Log) *ClickhouseWorker {
 	return &ClickhouseWorker{
-		cfg: cfg,
-		ch:  ch,
-		c:   c,
+		cfg:    cfg,
+		ch:     ch,
+		c:      c,
+		logger: logger,
 	}
 }
 
@@ -27,7 +29,7 @@ func (c *ClickhouseWorker) Start(ctx context.Context) {
 			if len(items) > 0 {
 				err := c.ch.BatchInsertToDefaultSchema(ctx, c.cfg.TableName, items)
 				if err != nil {
-					c..Errorf("failed to insert data to clickhouse: %s", err)
+					c.logger.Errorf("failed to insert data to clickhouse: %s", err)
 				}
 			}
 		}

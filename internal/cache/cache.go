@@ -16,30 +16,43 @@ type Cache struct {
 	items       []interface{}
 	cfg         *config.BufferConfig
 	c           chan []interface{}
+	ct          chan []interface{}
+	stop        bool
 }
 
 func New(cfg *config.BufferConfig, logger *log.Log, c chan []interface{}) *Cache {
 	items := make([]interface{}, 0)
 
 	cache := Cache{
-		items:       items,
-		logger:      logger,
-		maxSize:     cfg.MaxSize,
-		maxWait:     cfg.MaxWait,
-		maxByteSize: cfg.MaxByteSize,
-		cfg:         cfg,
-		c:           c,
+		items:   items,
+		logger:  logger,
+		maxSize: cfg.MaxSize,
+		maxWait: cfg.MaxWait,
+		cfg:     cfg,
+		c:       c,
 	}
 
-	cache.startCleaner()
-
 	return &cache
+}
+
+func (c *Cache) StartCleaner() {
+	go c.drainByTimeout()
+	go c.drainByLen()
+}
+
+func (c *Cache) Shutdown() {
+	c.stop = true
+	c.drain("shutdown")
 }
 
 func (c *Cache) Set(value interface{}) {
 	c.Lock()
 	defer c.Unlock()
 
+	if c.stop {
+		c.logger.Errorf("cache closed")
+		return
+	}
 	c.items = append(c.items, value)
 }
 
@@ -47,20 +60,27 @@ func (c *Cache) Count() int {
 	return len(c.items)
 }
 
-func (c *Cache) startCleaner() {
-	go c.clean(func() bool { return len(c.items) > c.maxSize }, "size")
-	go c.clean(func() bool { return cap(c.items) > c.maxByteSize }, "byte size")
-	go c.clean(func() bool { <-time.After(c.maxWait); return true }, "time")
+func (c *Cache) drain(cleanType string) {
+	c.Lock()
+	defer c.Unlock()
+
+	c.logger.Debugf("cleanup by %s complete", cleanType)
+	c.c <- c.items
+	c.items = make([]interface{}, 0)
 }
 
-func (c *Cache) clean(condition func() bool, cleanType string) {
+func (c *Cache) drainByTimeout() {
 	for {
-		if condition() {
-			c.logger.Debugf("cleanup by %s complete", cleanType)
-			c.c <- c.items
-			c.items = make([]interface{}, 0)
-		} else {
-			time.Sleep(5 * time.Second)
+		<-time.After(c.maxWait)
+		c.drain("timeout")
+	}
+}
+
+func (c *Cache) drainByLen() {
+	for {
+		if len(c.items) > c.maxSize {
+			c.drain("length")
 		}
+		<-time.After(5 * time.Second)
 	}
 }

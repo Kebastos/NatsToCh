@@ -21,16 +21,18 @@ type NatsSub interface {
 }
 
 type NatsWorker struct {
-	cfg *config.Config
-	sb  NatsSub
-	ch  ClickhouseStorage
+	cfg    *config.Config
+	sb     NatsSub
+	ch     ClickhouseStorage
+	logger *log.Log
 }
 
-func NewNatsWorker(cfg *config.Config, sb NatsSub, ch ClickhouseStorage) *NatsWorker {
+func NewNatsWorker(cfg *config.Config, sb NatsSub, ch ClickhouseStorage, logger *log.Log) *NatsWorker {
 	return &NatsWorker{
-		cfg: cfg,
-		sb:  sb,
-		ch:  ch,
+		cfg:    cfg,
+		sb:     sb,
+		ch:     ch,
+		logger: logger,
 	}
 }
 
@@ -51,7 +53,7 @@ func (n *NatsWorker) Start(ctx context.Context) error {
 			return err
 		}
 
-		log.Infof("subscribed to %s\n with params: buffer=%t and table=%s", s.Name, s.UseBuffer, s.TableName)
+		n.logger.Infof("subscribed to %s\n with params: buffer=%t and table=%s", s.Name, s.UseBuffer, s.TableName)
 	}
 
 	return nil
@@ -70,8 +72,8 @@ func (n *NatsWorker) subs(ctx context.Context, cfg config.Subject, f func(m *nat
 
 func (n *NatsWorker) callbackWithBuffer(ctx context.Context, cfg config.Subject) func(m *nats.Msg) {
 	c := make(chan []interface{}, 1)
-	cc := cache.New(&cfg.BufferConfig, c)
-	cw := NewClickhouseWorker(&cfg, n.ch, c)
+	cc := cache.New(&cfg.BufferConfig, n.logger, c)
+	cw := NewClickhouseWorker(&cfg, n.ch, c, n.logger)
 	cw.Start(ctx)
 
 	callback := func(m *nats.Msg) {
@@ -101,7 +103,7 @@ func (n *NatsWorker) callbackNoBuffer(ctx context.Context, table string) func(m 
 
 		err := n.ch.BatchInsertToDefaultSchema(ctx, table, []interface{}{entity})
 		if err != nil {
-			log.Errorf("failed to insert data to clickhouse. %s", err)
+			n.logger.Errorf("failed to insert data to clickhouse. %s", err)
 		}
 	}
 
@@ -120,7 +122,7 @@ func (n *NatsWorker) callbackNoBufferAsync(ctx context.Context, table string, wa
 
 		err := n.ch.AsyncInsertToDefaultSchema(ctx, table, []interface{}{entity}, wait)
 		if err != nil {
-			log.Errorf("failed to insert data to clickhouse. %s", err)
+			n.logger.Errorf("failed to insert data to clickhouse. %s", err)
 		}
 	}
 

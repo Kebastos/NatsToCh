@@ -75,6 +75,13 @@ func (c *NatsClient) Shutdown() {
 	c.logger.Infof("nats client was disconnected")
 }
 
+func (c *NatsClient) ConnStatus() nats.Status {
+	if c.nc != nil {
+		return c.nc.Status()
+	}
+	return nats.DISCONNECTED
+}
+
 func (c *NatsClient) Subscribe(subject string, handler func(msg *nats.Msg)) (*nats.Subscription, error) {
 	c.mx.Lock()
 	defer c.mx.Unlock()

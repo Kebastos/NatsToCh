@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -20,9 +21,9 @@ func MustConfig() *Log {
 
 func (l *Log) SetDebug(d bool) {
 	if d {
-		l.log.Handler().Enabled(nil, slog.LevelDebug)
+		l.log.Handler().Enabled(context.Background(), slog.LevelDebug)
 	} else {
-		l.log.Handler().Enabled(nil, slog.LevelInfo)
+		l.log.Handler().Enabled(context.Background(), slog.LevelInfo)
 	}
 }
 

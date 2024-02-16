@@ -46,7 +46,7 @@ func main() {
 		logger.Fatalf("failed to connect to ClickHouse. %s", err)
 	}
 
-	natsWorker := workers.NewNatsWorker(cfg, natsClient, chClient)
+	natsWorker := workers.NewNatsWorker(cfg, natsClient, chClient, logger)
 	if err = natsWorker.Start(ctx); err != nil {
 		logger.Fatalf("failed to start nats worker. %s", err)
 	}

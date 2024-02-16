@@ -10,60 +10,58 @@ import (
 
 type Config struct {
 	Debug      bool       `yaml:"debug"`
-	HTTPConfig HTTPConfig `yaml:"http"`
-	NATSConfig NATSConfig `yaml:"nats"`
-	CHConfig   CHConfig   `yaml:"clickhouse"`
-	Subjects   []Subject  `yaml:"subjects"`
+	HTTPConfig HTTPConfig `yaml:"http" env-required:"true"`
+	NATSConfig NATSConfig `yaml:"nats" env-required:"true"`
+	CHConfig   CHConfig   `yaml:"clickhouse" env-required:"true"`
+	Subjects   []Subject  `yaml:"subjects" env-required:"true"`
 }
 
 type HTTPConfig struct {
-	ListenAddr   string        `yaml:"listen_addr"`
-	ReadTimeout  time.Duration `yaml:"read_timeout"`
-	WriteTimeout time.Duration `yaml:"write_timeout"`
-	IdleTimeout  time.Duration `yaml:"idle_timeout"`
+	ListenAddr   string        `yaml:"listen_addr" env-required:"true"`
+	ReadTimeout  time.Duration `yaml:"read_timeout" env-default:"5s"`
+	WriteTimeout time.Duration `yaml:"write_timeout" env-default:"5s"`
+	IdleTimeout  time.Duration `yaml:"idle_timeout" env-default:"5s"`
 }
 
 type CHConfig struct {
-	Host            string        `yaml:"host"`
-	Port            uint16        `yaml:"port"`
-	Database        string        `yaml:"db"`
-	User            string        `yaml:"user"`
-	Password        string        `yaml:"password"`
-	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime"`
-	MaxOpenConns    int           `yaml:"max_open_conns"`
-	MaxIdleConns    int           `yaml:"max_idle_conns"`
+	Host            string        `yaml:"host" env-required:"true"`
+	Port            int           `yaml:"port" env-required:"true"`
+	Database        string        `yaml:"db" env-required:"true"`
+	User            string        `yaml:"user" env-required:"true"`
+	Password        string        `yaml:"password" env-required:"true"`
+	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime" env-default:"10s"`
+	MaxOpenConns    int           `yaml:"max_open_conns" env-default:"10"`
+	MaxIdleConns    int           `yaml:"max_idle_conns" env-default:"10"`
 }
 
 type NATSConfig struct {
-	ClientName             string `yaml:"client_name"`
-	User                   string `yaml:"user"`
-	Password               string `yaml:"password"`
-	Server                 string `yaml:"server"`
-	MaxReconnect           int    `yaml:"max_reconnect"`
-	ReconnectWait          int    `yaml:"reconnect_wait"`
-	ConnectTimeout         int    `yaml:"connect_timeout"`
-	MaxWait                int    `yaml:"max_wait"`
-	PublishAsyncMaxPending int    `yaml:"publish_async_max_pending"`
+	ClientName     string `yaml:"client_name" env-required:"true"`
+	User           string `yaml:"user" env-required:"true"`
+	Password       string `yaml:"password" env-required:"true"`
+	Server         string `yaml:"server" env-required:"true"`
+	MaxReconnect   int    `yaml:"max_reconnect" env-default:"5"`
+	ReconnectWait  int    `yaml:"reconnect_wait" env-default:"5"`
+	ConnectTimeout int    `yaml:"connect_timeout" env-default:"5"`
+	MaxWait        int    `yaml:"max_wait" env-default:"10"`
 }
 
 type Subject struct {
-	Name              string            `yaml:"name" `
+	Name              string            `yaml:"name" env-required:"true"`
 	Queue             string            `yaml:"queue"`
-	TableName         string            `yaml:"table_name"`
-	Async             bool              `yaml:"async"`
+	TableName         string            `yaml:"table_name" env-required:"true"`
+	Async             bool              `yaml:"async" env-default:"false"`
 	AsyncInsertConfig AsyncInsertConfig `yaml:"async_insert_config,omitempty"`
-	UseBuffer         bool              `yaml:"use_buffer"`
+	UseBuffer         bool              `yaml:"use_buffer" env-default:"true"`
 	BufferConfig      BufferConfig      `yaml:"buffer_config,omitempty"`
 }
 
 type AsyncInsertConfig struct {
-	Wait bool `yaml:"wait,omitempty"`
+	Wait bool `yaml:"wait" env-default:"false"`
 }
 
 type BufferConfig struct {
-	MaxSize     int           `yaml:"max_size,omitempty"`
-	MaxWait     time.Duration `yaml:"max_wait,omitempty"`
-	MaxByteSize int           `yaml:"max_byte_size,omitempty"`
+	MaxSize int           `yaml:"max_size" env-default:"1000"`
+	MaxWait time.Duration `yaml:"max_wait" env-default:"60s"`
 }
 
 var configFile = flag.String("config", "", "Proxy configuration filename")
