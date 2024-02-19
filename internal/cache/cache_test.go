@@ -20,7 +20,6 @@ func TestMain(m *testing.M) {
 		for {
 			<-c
 			logger.Infof("got message from cache")
-			return
 		}
 	}()
 
@@ -79,7 +78,7 @@ func TestCacheDrainAtLenOverflow(t *testing.T) {
 
 func TestCacheCleanByTime(t *testing.T) {
 	cfg := &config.BufferConfig{
-		MaxSize: 10,
+		MaxSize: 100,
 		MaxWait: 1 * time.Second,
 	}
 
@@ -89,7 +88,7 @@ func TestCacheCleanByTime(t *testing.T) {
 
 	ch.Set("test")
 
-	<-time.After(3 * time.Second)
+	<-time.After(2 * time.Second)
 	if ch.Count() > 0 {
 		t.Errorf("cache count should be 0, got %d", ch.Count())
 	}

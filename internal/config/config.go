@@ -64,22 +64,16 @@ type BufferConfig struct {
 	MaxWait time.Duration `yaml:"max_wait" env-default:"60s"`
 }
 
-var configFile = flag.String("config", "", "Proxy configuration filename")
-
-func NewConfig() (*Config, error) {
+func NewConfig(configFile string) (*Config, error) {
 	flag.Parse()
 
-	if *configFile == "" {
-		*configFile = "config/local.yaml"
-	}
-
-	if _, err := os.Stat(*configFile); os.IsNotExist(err) {
-		return nil, fmt.Errorf(fmt.Sprintf("config file doesn't exist: %s", *configFile))
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		return nil, fmt.Errorf(fmt.Sprintf("config file doesn't exist: %s", configFile))
 	}
 
 	var config Config
 
-	if err := cleanenv.ReadConfig(*configFile, &config); err != nil {
+	if err := cleanenv.ReadConfig(configFile, &config); err != nil {
 		return nil, err
 	}
 

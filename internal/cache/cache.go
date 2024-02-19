@@ -69,8 +69,8 @@ func (c *Cache) drain(cleanType string) {
 
 func (c *Cache) drainByTimeout() {
 	for {
-		<-time.After(c.maxWait)
 		c.drain("timeout")
+		<-time.After(c.maxWait)
 	}
 }
 

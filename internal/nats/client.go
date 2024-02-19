@@ -1,30 +1,35 @@
-package clients
+package nats
 
 import (
 	"fmt"
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
-	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"github.com/nats-io/nats.go"
 	"sync"
 	"time"
 )
 
-type NatsClient struct {
-	mx     sync.Mutex
-	cfg    *config.NATSConfig
-	nc     *nats.Conn
-	logger *log.Log
+type Instrumentation interface {
+	GotMessageCountInc(name string)
 }
 
-func NewNatsClient(cfg *config.NATSConfig, logger *log.Log) *NatsClient {
-	return &NatsClient{
-		cfg:    cfg,
-		logger: logger,
+type Client struct {
+	mx      sync.Mutex
+	cfg     *config.NATSConfig
+	nc      *nats.Conn
+	logger  *log.Log
+	metrics Instrumentation
+}
+
+func NewClient(cfg *config.NATSConfig, logger *log.Log, metrics Instrumentation) *Client {
+	return &Client{
+		cfg:     cfg,
+		logger:  logger,
+		metrics: metrics,
 	}
 }
 
-func (c *NatsClient) Connect() error {
+func (c *Client) Connect() error {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -61,7 +66,7 @@ func (c *NatsClient) Connect() error {
 	return nil
 }
 
-func (c *NatsClient) Shutdown() {
+func (c *Client) Shutdown() {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -76,14 +81,14 @@ func (c *NatsClient) Shutdown() {
 	c.logger.Infof("nats client was disconnected")
 }
 
-func (c *NatsClient) ConnStatus() nats.Status {
+func (c *Client) ConnStatus() nats.Status {
 	if c.nc != nil {
 		return c.nc.Status()
 	}
 	return nats.DISCONNECTED
 }
 
-func (c *NatsClient) Subscribe(subject string, handler func(msg *nats.Msg)) (*nats.Subscription, error) {
+func (c *Client) Subscribe(subject string, handler func(msg *nats.Msg)) (*nats.Subscription, error) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -92,12 +97,12 @@ func (c *NatsClient) Subscribe(subject string, handler func(msg *nats.Msg)) (*na
 	}
 
 	return c.nc.Subscribe(subject, func(msg *nats.Msg) {
-		metrics.GotMessageCount.Inc()
+		c.metrics.GotMessageCountInc(subject)
 		handler(msg)
 	})
 }
 
-func (c *NatsClient) QueueSubscribe(subject string, queue string, handler func(msg *nats.Msg)) (*nats.Subscription, error) {
+func (c *Client) QueueSubscribe(subject string, queue string, handler func(msg *nats.Msg)) (*nats.Subscription, error) {
 	c.mx.Lock()
 	defer c.mx.Unlock()
 
@@ -106,7 +111,7 @@ func (c *NatsClient) QueueSubscribe(subject string, queue string, handler func(m
 	}
 
 	return c.nc.QueueSubscribe(subject, queue, func(msg *nats.Msg) {
-		metrics.GotMessageCount.Inc()
+		c.metrics.GotMessageCountInc(subject)
 		handler(msg)
 	})
 }

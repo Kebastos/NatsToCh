@@ -2,8 +2,9 @@ server:
   env: local
   namespace: natstoch
   debug: true
-  http:
-    listen_addr: ":9098"
+
+http:
+  listen_addr: ":9098"
 
 clickhouse:
   host: localhost

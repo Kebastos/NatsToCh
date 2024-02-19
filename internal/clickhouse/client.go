@@ -1,4 +1,4 @@
-package clients
+package clickhouse
 
 import (
 	"context"
@@ -7,24 +7,28 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
-	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"github.com/Kebastos/NatsToCh/internal/models"
 	"reflect"
 	"strconv"
 	"strings"
 )
 
-type ClickhouseClient struct {
-	cfg    config.CHConfig
-	logger *log.Log
-	conn   clickhouse.Conn
+type MetricInstrumentation interface {
+	InsertMessageCountAdd(name string, count int)
 }
 
-func NewClickhouseClient(cfg *config.CHConfig, logger *log.Log) *ClickhouseClient {
-	return &ClickhouseClient{cfg: *cfg, logger: logger}
+type Client struct {
+	cfg     config.CHConfig
+	logger  *log.Log
+	conn    clickhouse.Conn
+	metrics MetricInstrumentation
 }
 
-func (c *ClickhouseClient) Connect() error {
+func NewClickhouseClient(cfg *config.CHConfig, logger *log.Log, metrics MetricInstrumentation) *Client {
+	return &Client{cfg: *cfg, logger: logger, metrics: metrics}
+}
+
+func (c *Client) Connect() error {
 	var err error
 	c.conn, err = clickhouse.Open(&clickhouse.Options{
 		Addr: []string{c.cfg.Host + ":" + strconv.Itoa(c.cfg.Port)},
@@ -51,16 +55,16 @@ func (c *ClickhouseClient) Connect() error {
 	return nil
 }
 
-func (c *ClickhouseClient) ConnStatus() driver.Stats {
+func (c *Client) ConnStatus() driver.Stats {
 	return c.conn.Stats()
 }
 
-func (c *ClickhouseClient) Close() error {
+func (c *Client) Close() error {
 	c.logger.Infof("closing clickhouse %s", c.cfg.Host)
 	return c.conn.Close()
 }
 
-func (c *ClickhouseClient) BatchInsertToDefaultTable(ctx context.Context, tableName string, data []interface{}) error {
+func (c *Client) BatchInsertToDefaultTable(ctx context.Context, tableName string, data []interface{}) error {
 	if len(data) == 0 {
 		return fmt.Errorf("no data provided")
 	}
@@ -84,12 +88,12 @@ func (c *ClickhouseClient) BatchInsertToDefaultTable(ctx context.Context, tableN
 		return err
 	}
 
-	metrics.InsertMessageCount.Add(float64(len(data)))
+	c.metrics.InsertMessageCountAdd(tableName, len(data))
 
 	return nil
 }
 
-func (c *ClickhouseClient) AsyncInsertToDefaultTable(ctx context.Context, tableName string, data []interface{}, wait bool) error {
+func (c *Client) AsyncInsertToDefaultTable(ctx context.Context, tableName string, data []interface{}, wait bool) error {
 	if len(data) == 0 {
 		return fmt.Errorf("no data provided")
 	}
@@ -124,6 +128,6 @@ func (c *ClickhouseClient) AsyncInsertToDefaultTable(ctx context.Context, tableN
 		return err
 	}
 
-	metrics.InsertMessageCount.Add(float64(len(data)))
+	c.metrics.InsertMessageCountAdd(tableName, len(data))
 	return nil
 }
