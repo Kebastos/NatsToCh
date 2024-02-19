@@ -19,6 +19,7 @@ const (
 
 var (
 	testData = &models.DefaultTable{
+		Id:             "e85d3192-a7d1-4d2b-800b-42403c2049cf",
 		Subject:        "test_subject",
 		CreateDateTime: time.Now(),
 		Content:        "test_data",
