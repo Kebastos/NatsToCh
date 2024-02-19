@@ -2,6 +2,7 @@ package workers_test
 
 import (
 	"context"
+	"github.com/Kebastos/NatsToCh/internal/log"
 	"testing"
 
 	"github.com/Kebastos/NatsToCh/internal/config"
@@ -25,6 +26,8 @@ var cfg = &config.Subject{
 	TableName: "test_table",
 }
 
+var logger = log.MustConfig()
+
 func TestClickhouseWorkerStart(t *testing.T) {
 	ch := &MockClickhouseStorage{
 		BatchInsertToDefaultSchemaFunc: func(ctx context.Context, tableName string, items []interface{}) error {
@@ -32,7 +35,7 @@ func TestClickhouseWorkerStart(t *testing.T) {
 		},
 	}
 	c := make(chan []interface{}, 1)
-	worker := workers.NewClickhouseWorker(cfg, ch, c)
+	worker := workers.NewClickhouseWorker(cfg, ch, c, logger)
 
 	worker.Start(context.Background())
 	c <- []interface{}{"test_data"}
