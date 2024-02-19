@@ -2,14 +2,15 @@ server:
   env: local
   namespace: natstoch
   debug: true
-  http:
-    listen_addr: ":9098"
+
+http:
+  listen_addr: ":9098"
 
 clickhouse:
   host: localhost
   port: 9000
   db: ch_cash
-  user: clickhouse
+  user: clickhouse_me
   password: qwerty
   conn_max_lifetime: 4s
   max_open_conns: 10
@@ -35,16 +36,5 @@ subjects: [
     async_insert_config: {
       wait: false
     }
-  },
-  {
-    name: "test1",
-    queue: "test1Queue",
-    table_name: "test1Cash",
-    use_buffer: true,
-    buffer_config: {
-      max_size: 10,
-      max_wait: 60s,
-      max_byte_size: 1000
-    },
   }
 ]

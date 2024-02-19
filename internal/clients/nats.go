@@ -30,9 +30,10 @@ func (c *NatsClient) Connect() error {
 
 	options := []nats.Option{
 		nats.Name(c.cfg.ClientName),
+		nats.UserInfo(c.cfg.User, c.cfg.Password),
 		nats.MaxReconnects(c.cfg.MaxReconnect),
-		nats.ReconnectWait(time.Duration(c.cfg.ReconnectWait) * time.Millisecond),
-		nats.Timeout(time.Duration(c.cfg.ConnectTimeout) * time.Millisecond),
+		nats.ReconnectWait(time.Duration(c.cfg.ReconnectWait) * time.Second),
+		nats.Timeout(time.Duration(c.cfg.ConnectTimeout) * time.Second),
 		nats.ErrorHandler(func(nc *nats.Conn, sub *nats.Subscription, err error) {
 			c.logger.Errorf("NATS error: %s\n", err)
 		}),
@@ -46,7 +47,7 @@ func (c *NatsClient) Connect() error {
 			c.logger.Errorf("NATS connection closed")
 		}),
 		nats.ConnectHandler(func(nc *nats.Conn) {
-			c.logger.Infof("NATS connected")
+			c.logger.Infof("connected to Nats server at %s", c.cfg.Server)
 		}),
 		nats.NoCallbacksAfterClientClose(),
 	}

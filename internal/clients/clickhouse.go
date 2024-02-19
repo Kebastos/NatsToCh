@@ -47,7 +47,7 @@ func (c *ClickhouseClient) Connect() error {
 		return err
 	}
 
-	c.logger.Infof("connected to clickhouse %s with %s", c.cfg.Host, version)
+	c.logger.Infof("connected to clickhouse at %s with %s", c.cfg.Host, version)
 	return nil
 }
 

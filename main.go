@@ -7,7 +7,6 @@ import (
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"github.com/Kebastos/NatsToCh/internal/server"
-	"github.com/Kebastos/NatsToCh/internal/workers"
 	"os/signal"
 	"syscall"
 )
@@ -20,7 +19,6 @@ func main() {
 
 	logger := log.MustConfig()
 
-	logger.Infof("loading config...")
 	cfg, err := config.NewConfig()
 	if err != nil {
 		logger.Fatalf("failed to read config. %s", err)
@@ -44,11 +42,6 @@ func main() {
 	chClient := clients.NewClickhouseClient(&cfg.CHConfig, logger)
 	if err = chClient.Connect(); err != nil {
 		logger.Fatalf("failed to connect to ClickHouse. %s", err)
-	}
-
-	natsWorker := workers.NewNatsWorker(cfg, natsClient, chClient, logger)
-	if err = natsWorker.Start(ctx); err != nil {
-		logger.Fatalf("failed to start nats worker. %s", err)
 	}
 
 	go func() {
