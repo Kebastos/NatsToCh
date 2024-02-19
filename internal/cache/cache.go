@@ -9,15 +9,13 @@ import (
 
 type Cache struct {
 	sync.RWMutex
-	logger      *log.Log
-	maxSize     int
-	maxWait     time.Duration
-	maxByteSize int
-	items       []interface{}
-	cfg         *config.BufferConfig
-	c           chan []interface{}
-	ct          chan []interface{}
-	stop        bool
+	logger  *log.Log
+	maxSize int
+	maxWait time.Duration
+	items   []interface{}
+	cfg     *config.BufferConfig
+	c       chan []interface{}
+	stop    bool
 }
 
 func New(cfg *config.BufferConfig, logger *log.Log, c chan []interface{}) *Cache {

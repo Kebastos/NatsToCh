@@ -48,7 +48,7 @@ func (n *NatsWorker) Start(ctx context.Context) error {
 			c = n.callbackNoBuffer(ctx, s.TableName)
 		}
 
-		err := n.subs(ctx, s, c)
+		err := n.subs(s, c)
 		if err != nil {
 			return err
 		}
@@ -59,7 +59,7 @@ func (n *NatsWorker) Start(ctx context.Context) error {
 	return nil
 }
 
-func (n *NatsWorker) subs(ctx context.Context, cfg config.Subject, f func(m *nats.Msg)) error {
+func (n *NatsWorker) subs(cfg config.Subject, f func(m *nats.Msg)) error {
 	var err error
 	if cfg.Queue != "" {
 		_, err = n.sb.QueueSubscribe(cfg.Name, cfg.Queue, f)

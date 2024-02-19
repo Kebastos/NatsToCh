@@ -18,11 +18,9 @@ var (
 func TestMain(m *testing.M) {
 	go func() {
 		for {
-			select {
-			case <-c:
-				logger.Infof("got message from cache")
-				return
-			}
+			<-c
+			logger.Infof("got message from cache")
+			return
 		}
 	}()
 
