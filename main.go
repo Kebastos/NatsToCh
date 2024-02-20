@@ -67,8 +67,7 @@ func main() {
 	if err != nil {
 		logger.Fatalf("failed to close ClickHouse. %s", err)
 	}
-	err = httpServer.Shutdown(ctx)
-	if err != nil {
-		logger.Fatalf("failed to shutdown http server. %s", err)
-	}
+	_ = httpServer.Shutdown(ctx)
+
+	logger.Infof("application stopped. version - %s", Version)
 }
