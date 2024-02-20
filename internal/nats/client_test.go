@@ -1,9 +1,8 @@
-package nats_test
+package nats
 
 import (
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
-	client "github.com/Kebastos/NatsToCh/internal/nats"
 	"github.com/nats-io/nats.go"
 	"testing"
 )
@@ -24,7 +23,7 @@ type MockMetrics struct{}
 func (m *MockMetrics) GotMessageCountInc(_ string) {}
 
 func TestNatsClientConnect(t *testing.T) {
-	c := client.NewClient(natsCfg, logger, &MockMetrics{})
+	c := NewClient(natsCfg, logger, &MockMetrics{})
 
 	err := c.Connect()
 	if err != nil {
@@ -33,7 +32,7 @@ func TestNatsClientConnect(t *testing.T) {
 }
 
 func TestNatsClientShutdown(t *testing.T) {
-	c := client.NewClient(natsCfg, logger, &MockMetrics{})
+	c := NewClient(natsCfg, logger, &MockMetrics{})
 
 	err := c.Connect()
 	if err != nil {
@@ -47,7 +46,7 @@ func TestNatsClientShutdown(t *testing.T) {
 }
 
 func TestNatsClientSubscribe(t *testing.T) {
-	c := client.NewClient(natsCfg, logger, &MockMetrics{})
+	c := NewClient(natsCfg, logger, &MockMetrics{})
 	err := c.Connect()
 	if err != nil {
 		t.Errorf("failed to connect to NATS server: %s", err)
@@ -60,7 +59,7 @@ func TestNatsClientSubscribe(t *testing.T) {
 }
 
 func TestNatsClientQueueSubscribe(t *testing.T) {
-	c := client.NewClient(natsCfg, logger, &MockMetrics{})
+	c := NewClient(natsCfg, logger, &MockMetrics{})
 	err := c.Connect()
 	if err != nil {
 		t.Errorf("failed to connect to NATS server: %s", err)
@@ -80,7 +79,7 @@ func TestNatsClientSubscribeWithoutConnect(t *testing.T) {
 		ReconnectWait:  500,
 		ConnectTimeout: 2000,
 	}
-	c := client.NewClient(cfg, logger, &MockMetrics{})
+	c := NewClient(cfg, logger, &MockMetrics{})
 
 	_, err := c.Subscribe("test.subject", func(msg *nats.Msg) {})
 	if err == nil {
@@ -89,7 +88,7 @@ func TestNatsClientSubscribeWithoutConnect(t *testing.T) {
 }
 
 func TestNatsClientQueueSubscribeWithoutConnect(t *testing.T) {
-	c := client.NewClient(natsCfg, logger, &MockMetrics{})
+	c := NewClient(natsCfg, logger, &MockMetrics{})
 
 	_, err := c.QueueSubscribe("test.subject", "test.queue", func(msg *nats.Msg) {})
 	if err == nil {

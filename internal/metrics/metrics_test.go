@@ -1,9 +1,8 @@
-package metrics_test
+package metrics
 
 import (
 	"context"
 	"github.com/Kebastos/NatsToCh/internal/config"
-	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"log"
 	"os"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-var m *metrics.Metrics
+var m *Metrics
 var err error
 
 var (
@@ -40,7 +39,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestMetrics_MustRegister(t *testing.T) {
-	m, err = metrics.NewMetrics(cfg)
+	m, err = NewMetrics(cfg)
 	if err != nil {
 		t.Errorf("failed to create metrics: %s", err)
 	}
@@ -49,7 +48,7 @@ func TestMetrics_MustRegister(t *testing.T) {
 
 func TestNewMetricsWithEmptySubjects(t *testing.T) {
 	cfg := &config.Config{}
-	_, err := metrics.NewMetrics(cfg)
+	_, err := NewMetrics(cfg)
 	if err == nil {
 		t.Errorf("NewMetrics should return error")
 	}

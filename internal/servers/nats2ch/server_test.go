@@ -1,15 +1,14 @@
-package workers_test
+package nats2ch
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Kebastos/NatsToCh/internal/config"
+	"github.com/Kebastos/NatsToCh/internal/log"
+	"github.com/nats-io/nats.go"
 	"testing"
 	"time"
-
-	"github.com/Kebastos/NatsToCh/internal/config"
-	"github.com/Kebastos/NatsToCh/internal/workers"
-	"github.com/nats-io/nats.go"
 )
 
 type MockNatsSub struct {
@@ -25,7 +24,22 @@ func (m *MockNatsSub) QueueSubscribe(subject string, queue string, handler func(
 	return m.QueueSubscribeFunc(subject, queue, handler)
 }
 
-func TestNatsWorkerStartsWithBuffer(t *testing.T) {
+type MockClickhouseStorage struct {
+	BatchInsertToDefaultSchemaFunc func(ctx context.Context, tableName string, items []interface{}) error
+	AsyncInsertToDefaultSchemaFunc func(ctx context.Context, tableName string, data []interface{}, wait bool) error
+}
+
+func (m *MockClickhouseStorage) BatchInsertToDefaultSchema(ctx context.Context, tableName string, items []interface{}) error {
+	return m.BatchInsertToDefaultSchemaFunc(ctx, tableName, items)
+}
+
+func (m *MockClickhouseStorage) AsyncInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}, wait bool) error {
+	return m.AsyncInsertToDefaultSchemaFunc(ctx, tableName, data, wait)
+}
+
+var logger = log.MustConfig()
+
+func TestNats2Ch_StartWithBuffer(t *testing.T) {
 	cfg := &config.Config{
 		Subjects: []config.Subject{
 			{
@@ -49,15 +63,15 @@ func TestNatsWorkerStartsWithBuffer(t *testing.T) {
 			return nil, nil
 		},
 	}
-	worker := workers.NewNatsWorker(cfg, sb, ch, logger)
+	srv := NewServer(cfg, sb, ch, logger)
 
-	err := worker.Start(context.Background())
+	err := srv.Start(context.Background())
 	if err != nil {
 		t.Errorf("expected no error, got %s", err)
 	}
 }
 
-func TestNatsWorkerStartsWithNoBuffer(t *testing.T) {
+func TestNats2Ch_StartWithNoBuffer(t *testing.T) {
 	cfg := &config.Config{
 		Subjects: []config.Subject{
 			{
@@ -76,15 +90,15 @@ func TestNatsWorkerStartsWithNoBuffer(t *testing.T) {
 			return nil, nil
 		},
 	}
-	worker := workers.NewNatsWorker(cfg, sb, ch, logger)
+	srv := NewServer(cfg, sb, ch, logger)
 
-	err := worker.Start(context.Background())
+	err := srv.Start(context.Background())
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
 }
 
-func TestNatsWorkerStartsWithNoBufferAsync(t *testing.T) {
+func TestNats2Ch_StartWithNoBufferAsync(t *testing.T) {
 	cfg := &config.Config{
 		Subjects: []config.Subject{
 			{
@@ -107,15 +121,15 @@ func TestNatsWorkerStartsWithNoBufferAsync(t *testing.T) {
 			return nil, nil
 		},
 	}
-	worker := workers.NewNatsWorker(cfg, sb, ch, logger)
+	srv := NewServer(cfg, sb, ch, logger)
 
-	err := worker.Start(context.Background())
+	err := srv.Start(context.Background())
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
 }
 
-func TestNatsWorkerStartsWithError(t *testing.T) {
+func TestNats2Ch_StartWithError(t *testing.T) {
 	cfg := &config.Config{
 		Subjects: []config.Subject{
 			{
@@ -134,9 +148,9 @@ func TestNatsWorkerStartsWithError(t *testing.T) {
 			return nil, fmt.Errorf("subscribe error")
 		},
 	}
-	worker := workers.NewNatsWorker(cfg, sb, ch, logger)
+	srv := NewServer(cfg, sb, ch, logger)
 
-	err := worker.Start(context.Background())
+	err := srv.Start(context.Background())
 	if err == nil {
 		t.Errorf("Expected error, got nil")
 	}

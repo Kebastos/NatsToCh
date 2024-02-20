@@ -1,4 +1,4 @@
-package cache_test
+package cache
 
 import (
 	"github.com/Kebastos/NatsToCh/internal/log"
@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Kebastos/NatsToCh/internal/cache"
 	"github.com/Kebastos/NatsToCh/internal/config"
 )
 
@@ -34,7 +33,7 @@ func TestNewCache(t *testing.T) {
 		MaxWait: 1 * time.Second,
 	}
 
-	ch := cache.New(cfg, logger, c)
+	ch := New(cfg, logger, c)
 
 	if ch.Count() != 0 {
 		t.Errorf("new cache should be empty, got %d items", ch.Count())
@@ -47,7 +46,7 @@ func TestCacheSet(t *testing.T) {
 		MaxWait: 1 * time.Second,
 	}
 
-	ch := cache.New(cfg, logger, c)
+	ch := New(cfg, logger, c)
 
 	ch.Set("test")
 
@@ -62,7 +61,7 @@ func TestCacheDrainAtLenOverflow(t *testing.T) {
 		MaxWait: 600 * time.Second,
 	}
 
-	ch := cache.New(cfg, logger, c)
+	ch := New(cfg, logger, c)
 	ch.StartCleaner()
 
 	ch.Set("test1")
@@ -82,7 +81,7 @@ func TestCacheCleanByTime(t *testing.T) {
 		MaxWait: 1 * time.Second,
 	}
 
-	ch := cache.New(cfg, logger, c)
+	ch := New(cfg, logger, c)
 
 	ch.StartCleaner()
 
@@ -99,7 +98,7 @@ func TestCacheShutdown(t *testing.T) {
 		MaxSize: 10,
 		MaxWait: 600 * time.Second,
 	}
-	ch := cache.New(cfg, logger, c)
+	ch := New(cfg, logger, c)
 	ch.StartCleaner()
 
 	ch.Set("test1")
@@ -118,7 +117,7 @@ func TestCacheCloseByShutdown(t *testing.T) {
 		MaxSize: 10,
 		MaxWait: 600 * time.Second,
 	}
-	ch := cache.New(cfg, logger, c)
+	ch := New(cfg, logger, c)
 	ch.StartCleaner()
 
 	ch.Shutdown()

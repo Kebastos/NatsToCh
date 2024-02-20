@@ -1,7 +1,6 @@
-package config_test
+package config
 
 import (
-	"github.com/Kebastos/NatsToCh/internal/config"
 	"testing"
 )
 
@@ -11,14 +10,14 @@ var (
 )
 
 func TestConfigNewWithUserFile(t *testing.T) {
-	_, err := config.NewConfig(configFile)
+	_, err := NewConfig(configFile)
 	if err != nil {
 		t.Errorf("failed to read config. %s", err)
 	}
 }
 
 func TestConfigNewWithEmptyFile(t *testing.T) {
-	_, err := config.NewConfig(emptyConfigFile)
+	_, err := NewConfig(emptyConfigFile)
 	if err == nil {
 		t.Errorf("should have failed to create config. %s", err)
 	}

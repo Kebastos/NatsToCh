@@ -1,8 +1,7 @@
-package clickhouse_test
+package clickhouse
 
 import (
 	"context"
-	"github.com/Kebastos/NatsToCh/internal/clickhouse"
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/models"
@@ -40,7 +39,7 @@ type MockMetrics struct{}
 func (m *MockMetrics) InsertMessageCountAdd(_ string, _ int) {}
 
 func TestClickhouseClientConnect(t *testing.T) {
-	client := clickhouse.NewClickhouseClient(cfg, logger, &MockMetrics{})
+	client := NewClickhouseClient(cfg, logger, &MockMetrics{})
 
 	err := client.Connect()
 	if err != nil {
@@ -49,7 +48,7 @@ func TestClickhouseClientConnect(t *testing.T) {
 }
 
 func TestClickhouseClientConnectIsClosed(t *testing.T) {
-	client := clickhouse.NewClickhouseClient(cfg, logger, &MockMetrics{})
+	client := NewClickhouseClient(cfg, logger, &MockMetrics{})
 
 	err := client.Connect()
 	if err != nil {
@@ -67,7 +66,7 @@ func TestClickhouseClientConnectIsClosed(t *testing.T) {
 }
 
 func TestClickhouseClientBatchInsertToDefaultTable(t *testing.T) {
-	client := clickhouse.NewClickhouseClient(cfg, logger, &MockMetrics{})
+	client := NewClickhouseClient(cfg, logger, &MockMetrics{})
 	err := client.Connect()
 	if err != nil {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
@@ -80,7 +79,7 @@ func TestClickhouseClientBatchInsertToDefaultTable(t *testing.T) {
 }
 
 func TestClickhouseClientBatchInsertToDefaultTableNoData(t *testing.T) {
-	client := clickhouse.NewClickhouseClient(cfg, logger, &MockMetrics{})
+	client := NewClickhouseClient(cfg, logger, &MockMetrics{})
 	err := client.Connect()
 	if err != nil {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
@@ -93,7 +92,7 @@ func TestClickhouseClientBatchInsertToDefaultTableNoData(t *testing.T) {
 }
 
 func TestClickhouseClientBatchInsertToWrongTable(t *testing.T) {
-	client := clickhouse.NewClickhouseClient(cfg, logger, &MockMetrics{})
+	client := NewClickhouseClient(cfg, logger, &MockMetrics{})
 	err := client.Connect()
 	if err != nil {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
@@ -106,7 +105,7 @@ func TestClickhouseClientBatchInsertToWrongTable(t *testing.T) {
 }
 
 func TestClickhouseClientAsyncInsertToDefaultTable(t *testing.T) {
-	client := clickhouse.NewClickhouseClient(cfg, logger, &MockMetrics{})
+	client := NewClickhouseClient(cfg, logger, &MockMetrics{})
 	err := client.Connect()
 	if err != nil {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
@@ -119,7 +118,7 @@ func TestClickhouseClientAsyncInsertToDefaultTable(t *testing.T) {
 }
 
 func TestClickhouseClientAsyncInsertToDefaultSchemaNoData(t *testing.T) {
-	client := clickhouse.NewClickhouseClient(cfg, logger, &MockMetrics{})
+	client := NewClickhouseClient(cfg, logger, &MockMetrics{})
 	err := client.Connect()
 	if err != nil {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
@@ -132,7 +131,7 @@ func TestClickhouseClientAsyncInsertToDefaultSchemaNoData(t *testing.T) {
 }
 
 func TestClickhouseClientAsyncInsertToDefaultWrongTable(t *testing.T) {
-	client := clickhouse.NewClickhouseClient(cfg, logger, &MockMetrics{})
+	client := NewClickhouseClient(cfg, logger, &MockMetrics{})
 	err := client.Connect()
 	if err != nil {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)

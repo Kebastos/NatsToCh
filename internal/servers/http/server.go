@@ -1,4 +1,4 @@
-package server
+package http
 
 import (
 	"context"
@@ -8,14 +8,14 @@ import (
 	"net/http"
 )
 
-type HTTPServer struct {
+type Server struct {
 	server *http.Server
 	logger *log.Log
 	cfg    *config.HTTPConfig
 }
 
-func NewHTTPServer(cfg *config.HTTPConfig, logger *log.Log) *HTTPServer {
-	return &HTTPServer{
+func NewServer(cfg *config.HTTPConfig, logger *log.Log) *Server {
+	return &Server{
 		cfg:    cfg,
 		logger: logger,
 		server: &http.Server{
@@ -27,7 +27,7 @@ func NewHTTPServer(cfg *config.HTTPConfig, logger *log.Log) *HTTPServer {
 	}
 }
 
-func (s *HTTPServer) Serve() {
+func (s *Server) Serve() {
 	http.Handle("/metrics", promhttp.Handler())
 
 	err := s.server.ListenAndServe()
@@ -36,6 +36,6 @@ func (s *HTTPServer) Serve() {
 	}
 }
 
-func (s *HTTPServer) Shutdown(ctx context.Context) error {
+func (s *Server) Shutdown(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
 }

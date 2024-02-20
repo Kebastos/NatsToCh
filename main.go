@@ -8,7 +8,7 @@ import (
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"github.com/Kebastos/NatsToCh/internal/nats"
-	"github.com/Kebastos/NatsToCh/internal/server"
+	"github.com/Kebastos/NatsToCh/internal/servers/http"
 	"os/signal"
 	"syscall"
 )
@@ -37,7 +37,7 @@ func main() {
 	}
 	m.MustRegister()
 
-	httpServer := server.NewHTTPServer(&cfg.HTTPConfig, logger)
+	httpServer := http.NewServer(&cfg.HTTPConfig, logger)
 	go httpServer.Serve()
 
 	natsClient := nats.NewClient(&cfg.NATSConfig, logger, m)
