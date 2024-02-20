@@ -33,8 +33,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y clickhouse-client
         sudo clickhouse-client --query "CREATE DATABASE IF NOT EXISTS test"
-        sudo clickhouse-client --query "CREATE TABLE IF NOT EXISTS test.test (Subject String, CreateDateTime DateTime, Content String) ENGINE = Memory"
-        sudo clickhouse-client --query "INSERT INTO test.test VALUES ('test', now(), 'test')"
+        sudo clickhouse-client --query "CREATE TABLE IF NOT EXISTS test.test (Id String, Subject String, CreateDateTime DateTime, Content String) ENGINE = Memory"
+        sudo clickhouse-client --query "INSERT INTO test.test VALUES ('f2739629-3baf-4ad4-b53a-2dec2e79c503', 'test', now(), 'test')"
         sudo clickhouse-client --query "SELECT * FROM test.test"
 
     - name: Check out code
