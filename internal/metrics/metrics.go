@@ -31,7 +31,7 @@ func NewMetrics(cfg *config.Config) (*Metrics, error) {
 		gotMap[s.Name] = prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: "messages",
 			Name:      "got",
-			Help:      fmt.Sprintf("total number of got messages %s", s.Name),
+			Help:      "total number of got messages",
 			ConstLabels: prometheus.Labels{
 				"name": s.Name,
 			},
@@ -40,7 +40,7 @@ func NewMetrics(cfg *config.Config) (*Metrics, error) {
 		insertMap[s.TableName] = prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: "messages",
 			Name:      "inserted",
-			Help:      fmt.Sprintf("total number of inserted messages %s", s.Name),
+			Help:      "total number of inserted messages",
 			ConstLabels: prometheus.Labels{
 				"table": s.TableName,
 			},
@@ -50,7 +50,7 @@ func NewMetrics(cfg *config.Config) (*Metrics, error) {
 			queueMap[s.Name] = prometheus.NewGauge(prometheus.GaugeOpts{
 				Namespace: "messages",
 				Name:      "queue",
-				Help:      fmt.Sprintf("total number of messages %s in queue", s.Name),
+				Help:      "total number of messages in queue",
 				ConstLabels: prometheus.Labels{
 					"queue": s.Name,
 				},
