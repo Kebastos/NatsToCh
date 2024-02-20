@@ -30,21 +30,30 @@ func NewMetrics(cfg *config.Config) (*Metrics, error) {
 	for _, s := range cfg.Subjects {
 		gotMap[s.Name] = prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: "messages",
-			Name:      fmt.Sprintf("got_%s", s.Name),
+			Name:      "got",
 			Help:      fmt.Sprintf("total number of got messages %s", s.Name),
+			ConstLabels: prometheus.Labels{
+				"name": s.Name,
+			},
 		})
 
 		insertMap[s.TableName] = prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: "messages",
-			Name:      fmt.Sprintf("insert_%s", s.TableName),
+			Name:      "inserted",
 			Help:      fmt.Sprintf("total number of inserted messages %s", s.Name),
+			ConstLabels: prometheus.Labels{
+				"table": s.TableName,
+			},
 		})
 
 		if s.UseBuffer {
 			queueMap[s.Name] = prometheus.NewGauge(prometheus.GaugeOpts{
 				Namespace: "messages",
-				Name:      fmt.Sprintf("queue_%s", s.Name),
+				Name:      "queue",
 				Help:      fmt.Sprintf("total number of messages %s in queue", s.Name),
+				ConstLabels: prometheus.Labels{
+					"queue": s.Name,
+				},
 			})
 		}
 	}

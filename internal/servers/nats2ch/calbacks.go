@@ -11,7 +11,8 @@ import (
 
 func (n *Nats2Ch) callbackWithBuffer(ctx context.Context, cfg config.Subject) func(m *nats.Msg) {
 	c := make(chan []interface{}, 1)
-	cc := cache.New(&cfg.BufferConfig, n.logger, c)
+	cc := cache.New(&cfg, n.logger, c, n.metrics)
+	cc.StartCleaner()
 	n.startInsert(ctx, c, cfg.TableName)
 
 	callback := func(m *nats.Msg) {

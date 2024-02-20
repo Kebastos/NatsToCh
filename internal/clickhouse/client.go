@@ -64,7 +64,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) BatchInsertToDefaultTable(ctx context.Context, tableName string, data []interface{}) error {
+func (c *Client) BatchInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}) error {
 	if len(data) == 0 {
 		return fmt.Errorf("no data provided")
 	}
@@ -93,7 +93,7 @@ func (c *Client) BatchInsertToDefaultTable(ctx context.Context, tableName string
 	return nil
 }
 
-func (c *Client) AsyncInsertToDefaultTable(ctx context.Context, tableName string, data []interface{}, wait bool) error {
+func (c *Client) AsyncInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}, wait bool) error {
 	if len(data) == 0 {
 		return fmt.Errorf("no data provided")
 	}

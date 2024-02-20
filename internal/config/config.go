@@ -52,7 +52,7 @@ type Subject struct {
 	Async             bool              `yaml:"async" env-default:"false"`
 	AsyncInsertConfig AsyncInsertConfig `yaml:"async_insert_config,omitempty"`
 	UseBuffer         bool              `yaml:"use_buffer" env-default:"true"`
-	BufferConfig      BufferConfig      `yaml:"buffer_config,omitempty"`
+	BufferConfig      BufferConfig      `yaml:"buffer_config"`
 }
 
 type AsyncInsertConfig struct {
@@ -60,8 +60,8 @@ type AsyncInsertConfig struct {
 }
 
 type BufferConfig struct {
-	MaxSize int           `yaml:"max_size" env-default:"1000"`
-	MaxWait time.Duration `yaml:"max_wait" env-default:"60s"`
+	MaxSize int           `yaml:"max_size" env-required:"true"`
+	MaxWait time.Duration `yaml:"max_wait" env-required:"true"`
 }
 
 func NewConfig(configFile string) (*Config, error) {

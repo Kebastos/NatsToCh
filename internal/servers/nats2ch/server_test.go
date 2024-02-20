@@ -37,6 +37,11 @@ func (m *MockClickhouseStorage) AsyncInsertToDefaultSchema(ctx context.Context, 
 	return m.AsyncInsertToDefaultSchemaFunc(ctx, tableName, data, wait)
 }
 
+type MockMetrics struct{}
+
+func (m *MockMetrics) QueueMessageCountInc(_ string)   {}
+func (m *MockMetrics) QueueMessageCountDrain(_ string) {}
+
 var logger = log.MustConfig()
 
 func TestNats2Ch_StartWithBuffer(t *testing.T) {
@@ -63,7 +68,7 @@ func TestNats2Ch_StartWithBuffer(t *testing.T) {
 			return nil, nil
 		},
 	}
-	srv := NewServer(cfg, sb, ch, logger)
+	srv := NewServer(cfg, sb, ch, logger, &MockMetrics{})
 
 	err := srv.Start(context.Background())
 	if err != nil {
@@ -90,7 +95,7 @@ func TestNats2Ch_StartWithNoBuffer(t *testing.T) {
 			return nil, nil
 		},
 	}
-	srv := NewServer(cfg, sb, ch, logger)
+	srv := NewServer(cfg, sb, ch, logger, &MockMetrics{})
 
 	err := srv.Start(context.Background())
 	if err != nil {
@@ -121,7 +126,7 @@ func TestNats2Ch_StartWithNoBufferAsync(t *testing.T) {
 			return nil, nil
 		},
 	}
-	srv := NewServer(cfg, sb, ch, logger)
+	srv := NewServer(cfg, sb, ch, logger, &MockMetrics{})
 
 	err := srv.Start(context.Background())
 	if err != nil {
@@ -148,7 +153,7 @@ func TestNats2Ch_StartWithError(t *testing.T) {
 			return nil, fmt.Errorf("subscribe error")
 		},
 	}
-	srv := NewServer(cfg, sb, ch, logger)
+	srv := NewServer(cfg, sb, ch, logger, &MockMetrics{})
 
 	err := srv.Start(context.Background())
 	if err == nil {

@@ -9,9 +9,32 @@ import (
 	"github.com/Kebastos/NatsToCh/internal/config"
 )
 
+type MockMetrics struct{}
+
+func (m *MockMetrics) QueueMessageCountInc(_ string)   {}
+func (m *MockMetrics) QueueMessageCountDrain(_ string) {}
+
 var (
-	logger = log.MustConfig()
-	c      = make(chan []interface{})
+	logger   = log.MustConfig()
+	c        = make(chan []interface{})
+	shortCfg = config.Subject{
+
+		Name:      "test",
+		UseBuffer: true,
+		BufferConfig: config.BufferConfig{
+			MaxSize: 10,
+			MaxWait: 1 * time.Second,
+		},
+	}
+	longCfg = config.Subject{
+
+		Name:      "test",
+		UseBuffer: true,
+		BufferConfig: config.BufferConfig{
+			MaxSize: 10,
+			MaxWait: 600 * time.Second,
+		},
+	}
 )
 
 func TestMain(m *testing.M) {
@@ -28,12 +51,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewCache(t *testing.T) {
-	cfg := &config.BufferConfig{
-		MaxSize: 10,
-		MaxWait: 1 * time.Second,
-	}
-
-	ch := New(cfg, logger, c)
+	ch := New(&shortCfg, logger, c, &MockMetrics{})
 
 	if ch.Count() != 0 {
 		t.Errorf("new cache should be empty, got %d items", ch.Count())
@@ -41,12 +59,7 @@ func TestNewCache(t *testing.T) {
 }
 
 func TestCacheSet(t *testing.T) {
-	cfg := &config.BufferConfig{
-		MaxSize: 10,
-		MaxWait: 1 * time.Second,
-	}
-
-	ch := New(cfg, logger, c)
+	ch := New(&shortCfg, logger, c, &MockMetrics{})
 
 	ch.Set("test")
 
@@ -56,12 +69,7 @@ func TestCacheSet(t *testing.T) {
 }
 
 func TestCacheDrainAtLenOverflow(t *testing.T) {
-	cfg := &config.BufferConfig{
-		MaxSize: 2,
-		MaxWait: 600 * time.Second,
-	}
-
-	ch := New(cfg, logger, c)
+	ch := New(&longCfg, logger, c, &MockMetrics{})
 	ch.StartCleaner()
 
 	ch.Set("test1")
@@ -76,12 +84,7 @@ func TestCacheDrainAtLenOverflow(t *testing.T) {
 }
 
 func TestCacheCleanByTime(t *testing.T) {
-	cfg := &config.BufferConfig{
-		MaxSize: 100,
-		MaxWait: 1 * time.Second,
-	}
-
-	ch := New(cfg, logger, c)
+	ch := New(&shortCfg, logger, c, &MockMetrics{})
 
 	ch.StartCleaner()
 
@@ -94,11 +97,7 @@ func TestCacheCleanByTime(t *testing.T) {
 }
 
 func TestCacheShutdown(t *testing.T) {
-	cfg := &config.BufferConfig{
-		MaxSize: 10,
-		MaxWait: 600 * time.Second,
-	}
-	ch := New(cfg, logger, c)
+	ch := New(&longCfg, logger, c, &MockMetrics{})
 	ch.StartCleaner()
 
 	ch.Set("test1")
@@ -113,11 +112,7 @@ func TestCacheShutdown(t *testing.T) {
 }
 
 func TestCacheCloseByShutdown(t *testing.T) {
-	cfg := &config.BufferConfig{
-		MaxSize: 10,
-		MaxWait: 600 * time.Second,
-	}
-	ch := New(cfg, logger, c)
+	ch := New(&longCfg, logger, c, &MockMetrics{})
 	ch.StartCleaner()
 
 	ch.Shutdown()

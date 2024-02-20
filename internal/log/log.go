@@ -1,7 +1,6 @@
 package log
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -12,7 +11,7 @@ type Log struct {
 }
 
 func MustConfig() *Log {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
 	return &Log{
 		log: log,
@@ -21,9 +20,9 @@ func MustConfig() *Log {
 
 func (l *Log) SetDebug(d bool) {
 	if d {
-		l.log.Handler().Enabled(context.Background(), slog.LevelDebug)
+		l.log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	} else {
-		l.log.Handler().Enabled(context.Background(), slog.LevelInfo)
+		l.log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	}
 }
 

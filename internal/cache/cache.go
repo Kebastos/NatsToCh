@@ -7,27 +7,34 @@ import (
 	"time"
 )
 
+type Instrumentation interface {
+	QueueMessageCountInc(name string)
+	QueueMessageCountDrain(name string)
+}
+
 type Cache struct {
 	sync.RWMutex
 	logger  *log.Log
 	maxSize int
 	maxWait time.Duration
 	items   []interface{}
-	cfg     *config.BufferConfig
+	cfg     *config.Subject
 	c       chan []interface{}
 	stop    bool
+	metrics Instrumentation
 }
 
-func New(cfg *config.BufferConfig, logger *log.Log, c chan []interface{}) *Cache {
+func New(cfg *config.Subject, logger *log.Log, c chan []interface{}, metrics Instrumentation) *Cache {
 	items := make([]interface{}, 0)
 
 	cache := Cache{
 		items:   items,
 		logger:  logger,
-		maxSize: cfg.MaxSize,
-		maxWait: cfg.MaxWait,
+		maxSize: cfg.BufferConfig.MaxSize,
+		maxWait: cfg.BufferConfig.MaxWait,
 		cfg:     cfg,
 		c:       c,
+		metrics: metrics,
 	}
 
 	return &cache
@@ -52,6 +59,7 @@ func (c *Cache) Set(value interface{}) {
 		return
 	}
 	c.items = append(c.items, value)
+	c.metrics.QueueMessageCountInc(c.cfg.Name)
 }
 
 func (c *Cache) Count() int {
@@ -65,6 +73,7 @@ func (c *Cache) drain(cleanType string) {
 	c.logger.Debugf("cleanup by %s complete", cleanType)
 	c.c <- c.items
 	c.items = make([]interface{}, 0)
+	c.metrics.QueueMessageCountDrain(c.cfg.Name)
 }
 
 func (c *Cache) drainByTimeout() {

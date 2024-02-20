@@ -9,6 +9,7 @@ import (
 	"github.com/Kebastos/NatsToCh/internal/metrics"
 	"github.com/Kebastos/NatsToCh/internal/nats"
 	"github.com/Kebastos/NatsToCh/internal/servers/http"
+	"github.com/Kebastos/NatsToCh/internal/servers/nats2ch"
 	"os/signal"
 	"syscall"
 )
@@ -49,6 +50,12 @@ func main() {
 	chClient := clickhouse.NewClickhouseClient(&cfg.CHConfig, logger, m)
 	if err = chClient.Connect(); err != nil {
 		logger.Fatalf("failed to connect to ClickHouse. %s", err)
+	}
+
+	n := nats2ch.NewServer(cfg, natsClient, chClient, logger, m)
+	err = n.Start(ctx)
+	if err != nil {
+		logger.Fatalf("failed to start NATS to ClickHouse server. %s", err)
 	}
 
 	logger.Infof("application started. version - %s", Version)

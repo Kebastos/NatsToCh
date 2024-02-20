@@ -72,7 +72,7 @@ func TestClickhouseClientBatchInsertToDefaultTable(t *testing.T) {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
 	}
 
-	err = client.BatchInsertToDefaultTable(context.Background(), tableName, []interface{}{testData})
+	err = client.BatchInsertToDefaultSchema(context.Background(), tableName, []interface{}{testData})
 	if err != nil {
 		t.Errorf("failed to batch insert to default schema: %s", err)
 	}
@@ -85,7 +85,7 @@ func TestClickhouseClientBatchInsertToDefaultTableNoData(t *testing.T) {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
 	}
 
-	err = client.BatchInsertToDefaultTable(context.Background(), tableName, []interface{}{})
+	err = client.BatchInsertToDefaultSchema(context.Background(), tableName, []interface{}{})
 	if err == nil {
 		t.Errorf("expected error when async inserting with no data")
 	}
@@ -98,7 +98,7 @@ func TestClickhouseClientBatchInsertToWrongTable(t *testing.T) {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
 	}
 
-	err = client.BatchInsertToDefaultTable(context.Background(), wrongTable, []interface{}{testData})
+	err = client.BatchInsertToDefaultSchema(context.Background(), wrongTable, []interface{}{testData})
 	if err == nil {
 		t.Errorf("expected error when async inserting with")
 	}
@@ -111,7 +111,7 @@ func TestClickhouseClientAsyncInsertToDefaultTable(t *testing.T) {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
 	}
 
-	err = client.AsyncInsertToDefaultTable(context.Background(), tableName, []interface{}{testData}, true)
+	err = client.AsyncInsertToDefaultSchema(context.Background(), tableName, []interface{}{testData}, true)
 	if err != nil {
 		t.Errorf("failed to async insert to default schema: %s", err)
 	}
@@ -124,7 +124,7 @@ func TestClickhouseClientAsyncInsertToDefaultSchemaNoData(t *testing.T) {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
 	}
 
-	err = client.AsyncInsertToDefaultTable(context.Background(), tableName, []interface{}{}, true)
+	err = client.AsyncInsertToDefaultSchema(context.Background(), tableName, []interface{}{}, true)
 	if err == nil {
 		t.Errorf("expected error when async inserting with no data")
 	}
@@ -137,7 +137,7 @@ func TestClickhouseClientAsyncInsertToDefaultWrongTable(t *testing.T) {
 		t.Errorf("failed to connect to Clickhouse server: %s", err)
 	}
 
-	err = client.AsyncInsertToDefaultTable(context.Background(), wrongTable, []interface{}{testData}, true)
+	err = client.AsyncInsertToDefaultSchema(context.Background(), wrongTable, []interface{}{testData}, true)
 	if err == nil {
 		t.Errorf("expected error when async inserting with")
 	}
