@@ -14,8 +14,7 @@ type Instrumentation interface {
 }
 
 type ClickhouseStorage interface {
-	BatchInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}) error
-	AsyncInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}, wait bool) error
+	BatchInsert(ctx context.Context, tableName string, data []interface{}) error
 }
 
 type NatsSub interface {
@@ -50,8 +49,6 @@ func (n *Nats2Ch) Start(ctx context.Context) error {
 				return fmt.Errorf("buffer configuration must be greater 0  for %s", s.Name)
 			}
 			c = n.callbackWithBuffer(ctx, s)
-		case s.Async:
-			c = n.callbackNoBufferAsync(ctx, s.TableName, s.AsyncInsertConfig.Wait)
 		default:
 			c = n.callbackNoBuffer(ctx, s.TableName)
 		}
@@ -83,7 +80,7 @@ func (n *Nats2Ch) startInsert(ctx context.Context, c chan []interface{}, tableNa
 		for {
 			items := <-c
 			if len(items) > 0 {
-				err := n.ch.BatchInsertToDefaultSchema(ctx, tableName, items)
+				err := n.ch.BatchInsert(ctx, tableName, items)
 				if err != nil {
 					n.logger.Errorf("failed to insert data to clickhouse: %s", err)
 				}

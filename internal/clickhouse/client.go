@@ -7,10 +7,7 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
-	"github.com/Kebastos/NatsToCh/internal/models"
-	"reflect"
 	"strconv"
-	"strings"
 )
 
 type MetricInstrumentation interface {
@@ -64,7 +61,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) BatchInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}) error {
+func (c *Client) BatchInsert(ctx context.Context, tableName string, data []interface{}) error {
 	if len(data) == 0 {
 		return fmt.Errorf("no data provided")
 	}
@@ -90,44 +87,5 @@ func (c *Client) BatchInsertToDefaultSchema(ctx context.Context, tableName strin
 
 	c.metrics.InsertMessageCountAdd(tableName, len(data))
 
-	return nil
-}
-
-func (c *Client) AsyncInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}, wait bool) error {
-	if len(data) == 0 {
-		return fmt.Errorf("no data provided")
-	}
-
-	t := reflect.TypeOf(models.DefaultTable{})
-
-	// Prepare the query
-	var fields []string
-	var placeholders []string
-	for i := 0; i < t.NumField(); i++ {
-		fields = append(fields, t.Field(i).Name)
-		placeholders = append(placeholders, "?")
-	}
-	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(fields, ", "), strings.Join(placeholders, ", "))
-
-	var insertData []interface{}
-	for _, d := range data {
-		v := reflect.ValueOf(d)
-		if v.Kind() == reflect.Ptr {
-			v = v.Elem()
-		}
-
-		if v.Type() == reflect.TypeOf(models.DefaultTable{}) {
-			for _, field := range fields {
-				insertData = append(insertData, v.FieldByName(field).Interface())
-			}
-		}
-	}
-
-	err := c.conn.AsyncInsert(ctx, query, wait, insertData...)
-	if err != nil {
-		return err
-	}
-
-	c.metrics.InsertMessageCountAdd(tableName, len(data))
 	return nil
 }

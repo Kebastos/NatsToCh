@@ -25,16 +25,11 @@ func (m *MockNatsSub) QueueSubscribe(subject string, queue string, handler func(
 }
 
 type MockClickhouseStorage struct {
-	BatchInsertToDefaultSchemaFunc func(ctx context.Context, tableName string, items []interface{}) error
-	AsyncInsertToDefaultSchemaFunc func(ctx context.Context, tableName string, data []interface{}, wait bool) error
+	BatchInsertFunc func(ctx context.Context, tableName string, items []interface{}) error
 }
 
-func (m *MockClickhouseStorage) BatchInsertToDefaultSchema(ctx context.Context, tableName string, items []interface{}) error {
-	return m.BatchInsertToDefaultSchemaFunc(ctx, tableName, items)
-}
-
-func (m *MockClickhouseStorage) AsyncInsertToDefaultSchema(ctx context.Context, tableName string, data []interface{}, wait bool) error {
-	return m.AsyncInsertToDefaultSchemaFunc(ctx, tableName, data, wait)
+func (m *MockClickhouseStorage) BatchInsert(ctx context.Context, tableName string, items []interface{}) error {
+	return m.BatchInsertFunc(ctx, tableName, items)
 }
 
 type MockMetrics struct{}
@@ -59,7 +54,7 @@ func TestNats2Ch_StartWithBuffer(t *testing.T) {
 		},
 	}
 	ch := &MockClickhouseStorage{
-		BatchInsertToDefaultSchemaFunc: func(ctx context.Context, tableName string, items []interface{}) error {
+		BatchInsertFunc: func(ctx context.Context, tableName string, items []interface{}) error {
 			return nil
 		},
 	}
@@ -86,38 +81,7 @@ func TestNats2Ch_StartWithNoBuffer(t *testing.T) {
 		},
 	}
 	ch := &MockClickhouseStorage{
-		BatchInsertToDefaultSchemaFunc: func(ctx context.Context, tableName string, items []interface{}) error {
-			return nil
-		},
-	}
-	sb := &MockNatsSub{
-		SubscribeFunc: func(subject string, cb func(msg *nats.Msg)) (*nats.Subscription, error) {
-			return nil, nil
-		},
-	}
-	srv := NewServer(cfg, sb, ch, logger, &MockMetrics{})
-
-	err := srv.Start(context.Background())
-	if err != nil {
-		t.Errorf("Expected no error, got %s", err)
-	}
-}
-
-func TestNats2Ch_StartWithNoBufferAsync(t *testing.T) {
-	cfg := &config.Config{
-		Subjects: []config.Subject{
-			{
-				Name:      "test_subject",
-				TableName: "test_table",
-				Async:     true,
-				AsyncInsertConfig: config.AsyncInsertConfig{
-					Wait: true,
-				},
-			},
-		},
-	}
-	ch := &MockClickhouseStorage{
-		AsyncInsertToDefaultSchemaFunc: func(ctx context.Context, tableName string, data []interface{}, wait bool) error {
+		BatchInsertFunc: func(ctx context.Context, tableName string, items []interface{}) error {
 			return nil
 		},
 	}
@@ -144,7 +108,7 @@ func TestNats2Ch_StartWithError(t *testing.T) {
 		},
 	}
 	ch := &MockClickhouseStorage{
-		BatchInsertToDefaultSchemaFunc: func(ctx context.Context, tableName string, items []interface{}) error {
+		BatchInsertFunc: func(ctx context.Context, tableName string, items []interface{}) error {
 			return errors.New("batch insert error")
 		},
 	}

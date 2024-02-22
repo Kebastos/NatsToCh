@@ -46,17 +46,11 @@ type NATSConfig struct {
 }
 
 type Subject struct {
-	Name              string            `yaml:"name" env-required:"true"`
-	Queue             string            `yaml:"queue"`
-	TableName         string            `yaml:"table_name" env-required:"true"`
-	Async             bool              `yaml:"async" env-default:"false"`
-	AsyncInsertConfig AsyncInsertConfig `yaml:"async_insert_config,omitempty"`
-	UseBuffer         bool              `yaml:"use_buffer" env-default:"true"`
-	BufferConfig      BufferConfig      `yaml:"buffer_config"`
-}
-
-type AsyncInsertConfig struct {
-	Wait bool `yaml:"wait" env-default:"false"`
+	Name         string       `yaml:"name" env-required:"true"`
+	Queue        string       `yaml:"queue"`
+	TableName    string       `yaml:"table_name" env-required:"true"`
+	UseBuffer    bool         `yaml:"use_buffer" env-default:"true"`
+	BufferConfig BufferConfig `yaml:"buffer_config"`
 }
 
 type BufferConfig struct {

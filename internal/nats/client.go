@@ -37,8 +37,8 @@ func (c *Client) Connect() error {
 		nats.Name(c.cfg.ClientName),
 		nats.UserInfo(c.cfg.User, c.cfg.Password),
 		nats.MaxReconnects(c.cfg.MaxReconnect),
-		nats.ReconnectWait(time.Duration(c.cfg.ReconnectWait) * time.Second),
-		nats.Timeout(time.Duration(c.cfg.ConnectTimeout) * time.Second),
+		nats.ReconnectWait(time.Duration(c.cfg.ReconnectWait) * time.Millisecond),
+		nats.Timeout(time.Duration(c.cfg.ConnectTimeout) * time.Millisecond),
 		nats.ErrorHandler(func(nc *nats.Conn, sub *nats.Subscription, err error) {
 			c.logger.Errorf("NATS error: %s\n", err)
 		}),
