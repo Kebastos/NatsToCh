@@ -1,3 +1,4 @@
+## Enable Debug mode for logger.
 debug: true
 
 http:
@@ -25,17 +26,29 @@ nats:
 
 subjects: [
   {
+    ## Name of subject
     name: "test",
+    ## Name of queue
     queue: "testQueue",
-    table_name: "test",
+    ## Name of table for insert
+    table_name: "testCash",
+    ## Enable Buffer mode, when messages from Nats stacks in buffer.
+    use_buffer: false,
+  },
+  {
+    ## Name of subject
+    name: "test1",
+    ## Name of queue
+    queue: "test1Queue",
+    ## Name of table for insert
+    table_name: "testCash",
+    ## Enable Buffer mode, when messages from Nats stacks in buffer.
     use_buffer: true,
     buffer_config: {
+      ## Max size of buffer for starting to drain. Must be greater than 0.
       max_size: 10,
+      ## Max timeout of buffer for starting to drain. Must be greater than 0.
       max_wait: 60s,
     },
-    async: true,
-    async_insert_config: {
-      wait: false
-    }
   }
 ]
