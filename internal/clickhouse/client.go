@@ -7,6 +7,7 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
+	"github.com/Kebastos/NatsToCh/internal/models"
 	"strconv"
 )
 
@@ -40,15 +41,15 @@ func (c *Client) Connect() error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to connect to ClickHouse: %w", err)
 	}
 
 	version, err := c.conn.ServerVersion()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get ClickHouse server version: %w", err)
 	}
 
-	c.logger.Infof("connected to clickhouse at %s with %s", c.cfg.Host, version)
+	c.logger.Infof("connected to ClickHouse at %s with version %s", c.cfg.Host, version)
 	return nil
 }
 
@@ -57,7 +58,7 @@ func (c *Client) ConnStatus() driver.Stats {
 }
 
 func (c *Client) Close() error {
-	c.logger.Infof("closing clickhouse %s", c.cfg.Host)
+	c.logger.Infof("closing ClickHouse connection to %s", c.cfg.Host)
 	return c.conn.Close()
 }
 
@@ -70,22 +71,32 @@ func (c *Client) BatchInsert(ctx context.Context, tableName string, data []inter
 
 	batch, err := c.conn.PrepareBatch(ctx, query)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to prepare batch for table %s: %w", tableName, err)
 	}
 
 	for _, row := range data {
 		err = batch.AppendStruct(row)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to append row to batch for table %s: %w", tableName, err)
 		}
 	}
 
 	err = batch.Send()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to send batch for table %s: %w", tableName, err)
 	}
 
 	c.metrics.InsertMessageCountAdd(tableName, len(data))
+
+	return nil
+}
+
+func (c *Client) InsertAsync(ctx context.Context, tableName string, data *models.DefaultEntity) error {
+	query := fmt.Sprintf("INSERT INTO %s VALUES ('%s', '%s', '%s', now(), '%s')", tableName, data.Id, data.ClientId, data.Subject, data.Content)
+
+	if err := c.conn.AsyncInsert(ctx, query, false); err != nil {
+		return fmt.Errorf("failed to prepare async insert for table %s: %w", tableName, err)
+	}
 
 	return nil
 }

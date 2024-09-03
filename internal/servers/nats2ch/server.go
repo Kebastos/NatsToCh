@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
+	"github.com/Kebastos/NatsToCh/internal/models"
 	"github.com/nats-io/nats.go"
 )
 
@@ -15,6 +16,7 @@ type Instrumentation interface {
 
 type ClickhouseStorage interface {
 	BatchInsert(ctx context.Context, tableName string, data []interface{}) error
+	InsertAsync(ctx context.Context, tableName string, data *models.DefaultEntity) error
 }
 
 type NatsSub interface {

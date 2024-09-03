@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	configFile      = "../../config/dev.yaml"
+	configFile      = "../../config/config_example.yaml"
 	emptyConfigFile = ""
 )
 

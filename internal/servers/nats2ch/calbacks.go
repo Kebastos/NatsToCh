@@ -27,7 +27,7 @@ func (n *Nats2Ch) callbackNoBuffer(ctx context.Context, table string) func(m *na
 	callback := func(m *nats.Msg) {
 		entity := models.NewDefaultEntity(n.cfg.NATSConfig.ClientName, m.Subject, string(m.Data))
 
-		err := n.ch.BatchInsert(ctx, table, []interface{}{entity})
+		err := n.ch.InsertAsync(ctx, table, entity)
 		if err != nil {
 			n.logger.Errorf("failed to insert data to clickhouse. %s", err)
 		}

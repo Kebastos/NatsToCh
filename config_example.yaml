@@ -8,8 +8,8 @@ clickhouse:
   host: localhost
   port: 9000
   db: ch_cash
-  user: clickhouse_me
-  password: qwerty
+  user: default
+  password:
   conn_max_lifetime: 4s
   max_open_conns: 10
   MaxIdleConns: 10

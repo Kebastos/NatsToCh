@@ -15,7 +15,7 @@ import (
 )
 
 var Version = "0.0.0"
-var configFile = flag.String("config", "config/local.yaml", "Proxy configuration filename")
+var configFile = flag.String("config", "config_example.yaml", "Proxy configuration filename")
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -29,7 +29,7 @@ func main() {
 	}
 	if cfg.Debug {
 		logger.SetDebug(cfg.Debug)
-		logger.Debugf("debug mode run")
+		logger.Debugf("debug mode enabled")
 	}
 
 	m, err := metrics.NewMetrics(cfg)

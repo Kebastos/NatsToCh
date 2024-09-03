@@ -28,7 +28,7 @@ type CHConfig struct {
 	Port            int           `yaml:"port" env-required:"true"`
 	Database        string        `yaml:"db" env-required:"true"`
 	User            string        `yaml:"user" env-required:"true"`
-	Password        string        `yaml:"password" env-required:"true"`
+	Password        string        `yaml:"password"`
 	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime" env-default:"10s"`
 	MaxOpenConns    int           `yaml:"max_open_conns" env-default:"10"`
 	MaxIdleConns    int           `yaml:"max_idle_conns" env-default:"10"`

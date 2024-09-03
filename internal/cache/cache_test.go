@@ -1,12 +1,11 @@
 package cache
 
 import (
+	"github.com/Kebastos/NatsToCh/internal/config"
 	"github.com/Kebastos/NatsToCh/internal/log"
 	"os"
 	"testing"
 	"time"
-
-	"github.com/Kebastos/NatsToCh/internal/config"
 )
 
 type MockMetrics struct{}
